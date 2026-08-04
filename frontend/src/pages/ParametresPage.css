@@ -1,0 +1,51 @@
+.parametres-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  align-items: flex-start;
+  max-width: 460px;
+}
+
+.badge-ok {
+  background: var(--color-accent-tech-soft);
+  color: var(--color-accent-tech-hover);
+}
+
+.badge-off {
+  background: var(--color-metal-100);
+  color: var(--color-metal-700);
+}
+
+.parametres-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.parametres-row {
+  display: flex;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.parametres-row input {
+  flex: 1;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+}
+
+.parametres-feedback {
+  font-size: 0.8125rem;
+  margin: 0;
+}
+
+.parametres-feedback-ok {
+  color: var(--color-state-success);
+}
+
+.parametres-feedback-error {
+  color: var(--color-state-error);
+}

@@ -35,3 +35,48 @@ export async function genererDevis(probleme: string): Promise<DevisApi> {
 
   return response.json()
 }
+
+export type DiagnosticApi = {
+  probleme_cle: string
+  probleme_label: string
+  categorie: string
+  confiance: number
+  questions_clarification: string[]
+  degrade: boolean
+}
+
+export async function analyserPhoto(fichier: File): Promise<DiagnosticApi> {
+  const formData = new FormData()
+  formData.append('photo', fichier)
+
+  const response = await fetch(`${API_URL}/diagnostic/analyser`, {
+    method: 'POST',
+    body: formData,
+  })
+
+  if (!response.ok) {
+    throw new Error(`Erreur ${response.status} lors de l'analyse de la photo`)
+  }
+
+  return response.json()
+}
+
+export async function getStatutCleOpenRouter(): Promise<{ configuree: boolean }> {
+  const response = await fetch(`${API_URL}/parametres/openrouter`)
+  if (!response.ok) {
+    throw new Error(`Erreur ${response.status}`)
+  }
+  return response.json()
+}
+
+export async function definirCleOpenRouter(apiKey: string): Promise<{ configuree: boolean }> {
+  const response = await fetch(`${API_URL}/parametres/openrouter`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ api_key: apiKey }),
+  })
+  if (!response.ok) {
+    throw new Error(`Erreur ${response.status}`)
+  }
+  return response.json()
+}

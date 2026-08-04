@@ -1,9 +1,12 @@
-export const mockDiagnostic = {
-  cle: 'mur_fissure_interieur',
-  categorie: 'Peinture',
-  probleme: 'Mur fissuré intérieur',
+import type { DiagnosticApi } from '../api'
+
+export const mockDiagnostic: DiagnosticApi = {
+  probleme_cle: 'mur_fissure_interieur',
+  probleme_label: 'Mur fissuré intérieur',
+  categorie: 'peinture',
   confiance: 0.92,
-  questionsClarification: ['Le mur est-il intérieur ou extérieur ?'],
+  questions_clarification: ['Le mur est-il intérieur ou extérieur ?'],
+  degrade: false,
 }
 
 export type LigneDevis = {

@@ -1,13 +1,23 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { genererDevis, type DevisApi } from '../api'
+import { genererDevis, type DevisApi, type DiagnosticApi } from '../api'
 import { mockDiagnostic } from '../mocks/mockData'
 import './DiagnosticPage.css'
+
+const ICONES_CATEGORIE: Record<string, string> = {
+  peinture: '🎨',
+  plomberie: '🔧',
+  fixation: '🪛',
+  electricite: '💡',
+  jardin: '🌱',
+}
 
 function DiagnosticPage() {
   const navigate = useNavigate()
   const location = useLocation()
-  const photoUrl = (location.state as { photoUrl?: string } | null)?.photoUrl ?? null
+  const state = location.state as { photoUrl?: string; diagnostic?: DiagnosticApi } | null
+  const photoUrl = state?.photoUrl ?? null
+  const diagnostic = state?.diagnostic ?? mockDiagnostic
 
   const [isScanning, setIsScanning] = useState(true)
   const [reponse, setReponse] = useState<string | null>(null)
@@ -23,7 +33,7 @@ function DiagnosticPage() {
     setIsGenerating(true)
     setErreur(null)
     try {
-      const devis: DevisApi = await genererDevis(mockDiagnostic.cle)
+      const devis: DevisApi = await genererDevis(diagnostic.probleme_cle)
       navigate('/devis', { state: { devis } })
     } catch {
       setErreur('Le service de diagnostic est momentanément indisponible. Réessayez dans un instant.')
@@ -54,20 +64,30 @@ function DiagnosticPage() {
       {!isScanning && (
         <div className="card diagnostic-result">
           <div className="diagnostic-result-head">
-            <span className="icon-badge">🎨</span>
+            <span className="icon-badge">{ICONES_CATEGORIE[diagnostic.categorie] ?? '🛠️'}</span>
             <div>
-              <span className="badge">● {Math.round(mockDiagnostic.confiance * 100)}% de confiance</span>
-              <h2 style={{ fontSize: '1.375rem', marginTop: 'var(--space-2)' }}>{mockDiagnostic.probleme}</h2>
-              <p className="page-lead">Catégorie détectée : {mockDiagnostic.categorie}</p>
+              <span className="badge">● {Math.round(diagnostic.confiance * 100)}% de confiance</span>
+              <h2 style={{ fontSize: '1.375rem', marginTop: 'var(--space-2)' }}>{diagnostic.probleme_label}</h2>
+              <p className="page-lead">Catégorie détectée : {diagnostic.categorie}</p>
             </div>
           </div>
 
-          {mockDiagnostic.questionsClarification.length > 0 && (
+          {diagnostic.degrade && (
+            <p style={{ fontSize: '0.8125rem', color: 'var(--color-state-warning)' }}>
+              Diagnostic simulé — configurez votre clé OpenRouter dans{' '}
+              <a href="/parametres" style={{ color: 'inherit', textDecoration: 'underline' }}>
+                Paramètres
+              </a>{' '}
+              pour une analyse réelle.
+            </p>
+          )}
+
+          {diagnostic.questions_clarification.length > 0 && (
             <div className="clarification">
               <h3 style={{ fontSize: '1rem', fontFamily: 'var(--font-body)', fontWeight: 600 }}>
                 Une dernière précision
               </h3>
-              {mockDiagnostic.questionsClarification.map((question) => (
+              {diagnostic.questions_clarification.map((question) => (
                 <div key={question} className="clarification-question">
                   <p>{question}</p>
                   <div className="clarification-options">

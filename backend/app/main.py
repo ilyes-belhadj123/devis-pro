@@ -5,6 +5,8 @@ from app.catalogue.router import router as catalogue_router
 from app.core.config import settings
 from app.core.database import ping_database
 from app.devis.router import router as devis_router
+from app.diagnostic.router import router as diagnostic_router
+from app.parametres.router import router as parametres_router
 
 app = FastAPI(title="SnapDevis API")
 
@@ -17,6 +19,8 @@ app.add_middleware(
 
 app.include_router(catalogue_router)
 app.include_router(devis_router)
+app.include_router(diagnostic_router)
+app.include_router(parametres_router)
 
 
 @app.get("/health")

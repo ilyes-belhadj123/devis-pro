@@ -1,16 +1,21 @@
 import { useRef, useState, type DragEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { analyserPhoto } from '../api'
+import { mockDiagnostic } from '../mocks/mockData'
 import HeroGraphic from '../components/HeroGraphic'
 import './UploadPage.css'
 
 function UploadPage() {
   const navigate = useNavigate()
   const inputRef = useRef<HTMLInputElement>(null)
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoUrl, setPhotoUrl] = useState<string | null>(null)
   const [isDragging, setIsDragging] = useState(false)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
 
   const handleFile = (file: File | undefined) => {
     if (!file) return
+    setPhotoFile(file)
     setPhotoUrl(URL.createObjectURL(file))
   }
 
@@ -18,6 +23,19 @@ function UploadPage() {
     event.preventDefault()
     setIsDragging(false)
     handleFile(event.dataTransfer.files[0])
+  }
+
+  const analyser = async () => {
+    if (!photoFile) return
+    setIsAnalyzing(true)
+    try {
+      const diagnostic = await analyserPhoto(photoFile)
+      navigate('/diagnostic', { state: { photoUrl, diagnostic } })
+    } catch {
+      navigate('/diagnostic', { state: { photoUrl, diagnostic: { ...mockDiagnostic, degrade: true } } })
+    } finally {
+      setIsAnalyzing(false)
+    }
   }
 
   return (
@@ -71,13 +89,8 @@ function UploadPage() {
             />
           </div>
 
-          <button
-            type="button"
-            className="btn btn-primary"
-            disabled={!photoUrl}
-            onClick={() => navigate('/diagnostic', { state: { photoUrl } })}
-          >
-            Analyser la photo →
+          <button type="button" className="btn btn-primary" disabled={!photoFile || isAnalyzing} onClick={analyser}>
+            {isAnalyzing ? 'Analyse en cours…' : 'Analyser la photo →'}
           </button>
         </div>
 
