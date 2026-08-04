@@ -9,3 +9,26 @@ def test_analyser_sans_cle_configuree_renvoie_mode_degrade(client):
     resultat = response.json()
     assert resultat["degrade"] is True
     assert resultat["probleme_cle"] == "mur_fissure_interieur"
+    assert resultat["session_id"] is not None
+
+
+def test_affiner_sans_session_bascule_interieur_exterieur(client):
+    response = client.post(
+        "/diagnostic/affiner",
+        json={"session_id": None, "probleme_cle": "mur_fissure_interieur", "reponse": "Extérieur"},
+    )
+    assert response.status_code == 200
+    resultat = response.json()
+    assert resultat["probleme_cle"] == "mur_fissure_exterieur"
+    assert resultat["questions_clarification"] == []
+    assert resultat["degrade"] is False
+
+
+def test_affiner_reponse_sans_correspondance_garde_la_cle(client):
+    response = client.post(
+        "/diagnostic/affiner",
+        json={"session_id": None, "probleme_cle": "robinet_qui_fuit", "reponse": "Extérieur"},
+    )
+    assert response.status_code == 200
+    resultat = response.json()
+    assert resultat["probleme_cle"] == "robinet_qui_fuit"

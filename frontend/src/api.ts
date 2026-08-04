@@ -43,6 +43,7 @@ export type DiagnosticApi = {
   confiance: number
   questions_clarification: string[]
   degrade: boolean
+  session_id?: string | null
 }
 
 export async function analyserPhoto(fichier: File): Promise<DiagnosticApi> {
@@ -56,6 +57,27 @@ export async function analyserPhoto(fichier: File): Promise<DiagnosticApi> {
 
   if (!response.ok) {
     throw new Error(`Erreur ${response.status} lors de l'analyse de la photo`)
+  }
+
+  return response.json()
+}
+
+export async function affinerDiagnostic(
+  diagnostic: DiagnosticApi,
+  reponse: string,
+): Promise<DiagnosticApi> {
+  const response = await fetch(`${API_URL}/diagnostic/affiner`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      session_id: diagnostic.session_id ?? null,
+      probleme_cle: diagnostic.probleme_cle,
+      reponse,
+    }),
+  })
+
+  if (!response.ok) {
+    throw new Error(`Erreur ${response.status} lors de l'affinage du diagnostic`)
   }
 
   return response.json()

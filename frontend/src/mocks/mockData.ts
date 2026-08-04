@@ -7,6 +7,7 @@ export const mockDiagnostic: DiagnosticApi = {
   confiance: 0.92,
   questions_clarification: ['Le mur est-il intérieur ou extérieur ?'],
   degrade: false,
+  session_id: null,
 }
 
 export type LigneDevis = {

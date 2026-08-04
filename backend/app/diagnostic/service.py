@@ -37,12 +37,57 @@ def _extraire_json(texte: str) -> dict:
     return json.loads(correspondance.group(0))
 
 
-async def analyser_photo(contenu_image: bytes, content_type: str) -> dict:
+async def _categorie_pour_probleme(probleme_cle: str) -> str:
+    regle = await database.regles_association.find_one({"probleme": probleme_cle})
+    if not regle:
+        return "indetermine"
+    produit = await database.produits.find_one({"reference": regle["references_produits"][0]})
+    return produit["categorie"] if produit else "indetermine"
+
+
+def _basculer_interieur_exterieur(probleme_cle: str, reponse: str) -> str:
+    reponse_normalisee = reponse.strip().lower()
+    bascule = None
+    if reponse_normalisee == "extérieur" and probleme_cle.endswith("_interieur"):
+        bascule = probleme_cle.replace("_interieur", "_exterieur")
+    elif reponse_normalisee == "intérieur" and probleme_cle.endswith("_exterieur"):
+        bascule = probleme_cle.replace("_exterieur", "_interieur")
+    return bascule if bascule in PROBLEMES_CONNUS else probleme_cle
+
+
+async def affiner_diagnostic(probleme_cle: str, reponse: str, session: tuple[bytes, str] | None) -> dict:
+    if session is not None:
+        contenu_image, content_type = session
+        try:
+            return await analyser_photo(
+                contenu_image,
+                content_type,
+                contexte_clarification=f"Précision apportée par l'utilisateur : {reponse}.",
+            )
+        except DiagnosticIndisponible:
+            pass
+
+    probleme_affine = _basculer_interieur_exterieur(probleme_cle, reponse)
+    return {
+        "probleme_cle": probleme_affine,
+        "probleme_label": f"Diagnostic affiné ({reponse.lower()})",
+        "categorie": await _categorie_pour_probleme(probleme_affine),
+        "confiance": 0.85,
+        "questions_clarification": [],
+        "degrade": False,
+    }
+
+
+async def analyser_photo(contenu_image: bytes, content_type: str, contexte_clarification: str | None = None) -> dict:
     api_key = await get_openrouter_api_key()
     if not api_key:
         raise DiagnosticIndisponible("Cle OpenRouter non configuree")
 
     image_b64 = base64.b64encode(contenu_image).decode("ascii")
+
+    texte_utilisateur = "Analyse cette photo et identifie le probleme a resoudre."
+    if contexte_clarification:
+        texte_utilisateur += f" {contexte_clarification}"
 
     payload = {
         "model": MODELE,
@@ -51,7 +96,7 @@ async def analyser_photo(contenu_image: bytes, content_type: str) -> dict:
             {
                 "role": "user",
                 "content": [
-                    {"type": "text", "text": "Analyse cette photo et identifie le probleme a resoudre."},
+                    {"type": "text", "text": texte_utilisateur},
                     {"type": "image_url", "image_url": {"url": f"data:{content_type};base64,{image_b64}"}},
                 ],
             },
@@ -77,13 +122,8 @@ async def analyser_photo(contenu_image: bytes, content_type: str) -> dict:
     except (KeyError, IndexError, json.JSONDecodeError) as exc:
         raise DiagnosticIndisponible(f"Reponse OpenRouter inattendue : {exc}") from exc
 
-    categorie = "indetermine"
-    regle = await database.regles_association.find_one({"probleme": probleme_cle})
-    if regle:
-        produit = await database.produits.find_one({"reference": regle["references_produits"][0]})
-        if produit:
-            categorie = produit["categorie"]
-    else:
+    categorie = await _categorie_pour_probleme(probleme_cle)
+    if categorie == "indetermine":
         # cle hors liste : on garde la reponse mais on force une clarification manuelle
         resultat["confiance"] = min(float(resultat.get("confiance", 0.5)), 0.4)
         resultat.setdefault("questions_clarification", [])

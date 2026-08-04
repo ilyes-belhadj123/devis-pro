@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { genererDevis, type DevisApi, type DiagnosticApi } from '../api'
+import { affinerDiagnostic, genererDevis, type DevisApi, type DiagnosticApi } from '../api'
 import { mockDiagnostic } from '../mocks/mockData'
 import './DiagnosticPage.css'
 
@@ -17,10 +17,11 @@ function DiagnosticPage() {
   const location = useLocation()
   const state = location.state as { photoUrl?: string; diagnostic?: DiagnosticApi } | null
   const photoUrl = state?.photoUrl ?? null
-  const diagnostic = state?.diagnostic ?? mockDiagnostic
 
+  const [diagnostic, setDiagnostic] = useState<DiagnosticApi>(state?.diagnostic ?? mockDiagnostic)
   const [isScanning, setIsScanning] = useState(true)
-  const [reponse, setReponse] = useState<string | null>(null)
+  const [reponseChoisie, setReponseChoisie] = useState<string | null>(null)
+  const [isAffining, setIsAffining] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const [erreur, setErreur] = useState<string | null>(null)
 
@@ -28,6 +29,20 @@ function DiagnosticPage() {
     const timer = setTimeout(() => setIsScanning(false), 1800)
     return () => clearTimeout(timer)
   }, [])
+
+  const repondreClarification = async (reponse: string) => {
+    setReponseChoisie(reponse)
+    setIsAffining(true)
+    setErreur(null)
+    try {
+      const diagnosticAffine = await affinerDiagnostic(diagnostic, reponse)
+      setDiagnostic(diagnosticAffine)
+    } catch {
+      setErreur("Impossible d'affiner le diagnostic pour le moment.")
+    } finally {
+      setIsAffining(false)
+    }
+  }
 
   const genererLeDevis = async () => {
     setIsGenerating(true)
@@ -95,16 +110,23 @@ function DiagnosticPage() {
                       <button
                         key={option}
                         type="button"
-                        className={`btn btn-secondary ${reponse === option ? 'clarification-selected' : ''}`}
-                        onClick={() => setReponse(option)}
+                        disabled={isAffining}
+                        className={`btn btn-secondary ${reponseChoisie === option ? 'clarification-selected' : ''}`}
+                        onClick={() => repondreClarification(option)}
                       >
-                        {option}
+                        {isAffining && reponseChoisie === option ? '…' : option}
                       </button>
                     ))}
                   </div>
                 </div>
               ))}
             </div>
+          )}
+
+          {reponseChoisie && !isAffining && diagnostic.questions_clarification.length === 0 && (
+            <p style={{ fontSize: '0.8125rem', color: 'var(--color-state-success)' }}>
+              Diagnostic affiné à partir de votre précision ✓
+            </p>
           )}
 
           {erreur && <p style={{ color: 'var(--color-state-error)', fontSize: '0.875rem' }}>{erreur}</p>}
