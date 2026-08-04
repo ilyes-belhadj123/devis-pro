@@ -1,5 +1,7 @@
 from datetime import datetime, timezone
 
+from bson import ObjectId
+from bson.errors import InvalidId
 from fastapi import APIRouter, HTTPException, Response
 
 from app.core.database import database
@@ -10,6 +12,8 @@ from app.devis.models import (
     DevisPdfInput,
     DiagnosticInput,
     GroupeCategorie,
+    HistoriqueDetail,
+    HistoriqueResume,
     LigneDevis,
     RepartitionProbleme,
     StatistiquesDevis,
@@ -65,6 +69,7 @@ async def generer_devis(diagnostic: DiagnosticInput) -> DevisGenere:
                 "probleme": diagnostic.probleme,
                 "produit_principal_prix": lignes[0].prix_unitaire,
                 "total_complet": total,
+                "lignes": [ligne.model_dump() for ligne in lignes],
                 "date": datetime.now(timezone.utc),
             }
         )
@@ -129,4 +134,51 @@ async def statistiques_devis() -> StatistiquesDevis:
         delta_moyen=round(delta_moyen, 2),
         delta_pourcentage=round(delta_pourcentage, 1),
         repartition_par_probleme=repartition,
+    )
+
+
+@router.get("/historique", response_model=list[HistoriqueResume])
+async def lister_historique() -> list[HistoriqueResume]:
+    documents = await database.historique_devis.find({}).sort("date", -1).to_list()
+    return [
+        HistoriqueResume(
+            session_id=str(document["_id"]),
+            probleme=document["probleme"],
+            date=document["date"],
+            total=document["total_complet"],
+            nombre_lignes=len(document.get("lignes", [])),
+        )
+        for document in documents
+    ]
+
+
+@router.get("/historique/{session_id}", response_model=HistoriqueDetail)
+async def obtenir_historique(session_id: str) -> HistoriqueDetail:
+    try:
+        identifiant = ObjectId(session_id)
+    except InvalidId as exc:
+        raise HTTPException(status_code=400, detail="Identifiant de session invalide") from exc
+
+    document = await database.historique_devis.find_one({"_id": identifiant})
+    if document is None:
+        raise HTTPException(status_code=404, detail="Session introuvable")
+
+    lignes = [LigneDevis(**ligne) for ligne in document.get("lignes", [])]
+
+    groupes_par_categorie: dict[str, float] = {}
+    for ligne in lignes:
+        groupes_par_categorie[ligne.categorie] = groupes_par_categorie.get(ligne.categorie, 0) + ligne.sous_total
+
+    groupes = [
+        GroupeCategorie(categorie=categorie, sous_total=round(sous_total, 2))
+        for categorie, sous_total in groupes_par_categorie.items()
+    ]
+
+    return HistoriqueDetail(
+        session_id=session_id,
+        probleme=document["probleme"],
+        date=document["date"],
+        lignes=lignes,
+        groupes=groupes,
+        total=document["total_complet"],
     )

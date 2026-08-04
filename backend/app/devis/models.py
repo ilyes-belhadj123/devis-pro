@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel
 
 
@@ -66,3 +68,20 @@ class StatistiquesDevis(BaseModel):
     delta_moyen: float
     delta_pourcentage: float
     repartition_par_probleme: list[RepartitionProbleme]
+
+
+class HistoriqueResume(BaseModel):
+    session_id: str
+    probleme: str
+    date: datetime
+    total: float
+    nombre_lignes: int
+
+
+class HistoriqueDetail(BaseModel):
+    session_id: str
+    probleme: str
+    date: datetime
+    lignes: list[LigneDevis]
+    groupes: list[GroupeCategorie]
+    total: float

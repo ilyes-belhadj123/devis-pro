@@ -166,6 +166,30 @@ export async function getStatistiques(): Promise<StatistiquesApi> {
   return response.json()
 }
 
+export type HistoriqueResumeApi = {
+  session_id: string
+  probleme: string
+  date: string
+  total: number
+  nombre_lignes: number
+}
+
+export async function getHistorique(): Promise<HistoriqueResumeApi[]> {
+  const response = await fetch(`${API_URL}/devis/historique`)
+  if (!response.ok) {
+    throw new Error(`Erreur ${response.status}`)
+  }
+  return response.json()
+}
+
+export async function getHistoriqueDetail(sessionId: string): Promise<DevisApi> {
+  const response = await fetch(`${API_URL}/devis/historique/${sessionId}`)
+  if (!response.ok) {
+    throw new Error(`Erreur ${response.status}`)
+  }
+  return response.json()
+}
+
 export async function getStatutCleOpenRouter(): Promise<{ configuree: boolean }> {
   const response = await fetch(`${API_URL}/parametres/openrouter`)
   if (!response.ok) {
