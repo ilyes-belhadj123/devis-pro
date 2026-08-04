@@ -1,0 +1,23 @@
+.logo {
+  font-size: 1.25rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: baseline;
+}
+
+.logo-snap {
+  font-family: var(--font-body);
+  color: var(--color-accent-copper);
+  font-weight: 700;
+}
+
+.logo-dot {
+  color: var(--color-accent-tech);
+  margin: 0 1px;
+}
+
+.logo-devis {
+  font-family: var(--font-heading);
+  font-weight: 400;
+  color: var(--color-text-primary);
+}

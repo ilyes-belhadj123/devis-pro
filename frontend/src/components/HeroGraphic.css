@@ -1,0 +1,45 @@
+.hero-graphic {
+  display: flex;
+  justify-content: center;
+}
+
+.hero-graphic-svg {
+  width: 100%;
+  max-width: 320px;
+}
+
+.hero-graphic-ring {
+  animation: hero-ring-spin 18s linear infinite;
+  transform-origin: 160px 160px;
+}
+
+.hero-graphic-float-1 {
+  animation: hero-float 4.5s ease-in-out infinite;
+}
+
+.hero-graphic-float-2 {
+  animation: hero-float 4.5s ease-in-out infinite 0.8s;
+}
+
+.hero-graphic-float-3 {
+  animation: hero-float 4.5s ease-in-out infinite 1.6s;
+}
+
+@keyframes hero-ring-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes hero-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}

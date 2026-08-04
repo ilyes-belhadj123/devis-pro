@@ -1,0 +1,84 @@
+{
+  "color": {
+    "background": {
+      "base": "#F6F1E8",
+      "surface": "#FFFDF9",
+      "surfaceSunken": "#EDE6D8"
+    },
+    "text": {
+      "primary": "#2A2521",
+      "secondary": "#6B6259",
+      "onAccent": "#FFFFFF"
+    },
+    "border": {
+      "default": "#DED6C7",
+      "strong": "#B8ADA0"
+    },
+    "accent": {
+      "copper": "#C1662F",
+      "copperHover": "#A8551F",
+      "copperSoft": "#F3E0D2",
+      "tech": "#15B8B0",
+      "techHover": "#0F8F89",
+      "techSoft": "#E3F7F5"
+    },
+    "metal": {
+      "100": "#F1EFEC",
+      "300": "#D4D1CB",
+      "500": "#9C978D",
+      "700": "#5B5750"
+    },
+    "state": {
+      "success": "#3F8F5F",
+      "warning": "#D69A2D",
+      "error": "#C1392B"
+    }
+  },
+  "font": {
+    "family": {
+      "heading": "'Fraunces', Georgia, serif",
+      "body": "'Space Grotesk', system-ui, sans-serif"
+    },
+    "weight": {
+      "regular": 400,
+      "medium": 500,
+      "semibold": 600,
+      "bold": 700
+    }
+  },
+  "text": {
+    "display": { "size": "2.75rem", "lineHeight": 1.1, "letterSpacing": "-0.01em", "family": "heading", "weight": 600 },
+    "h1": { "size": "2.25rem", "lineHeight": 1.15, "letterSpacing": "-0.01em", "family": "heading", "weight": 600 },
+    "h2": { "size": "1.75rem", "lineHeight": 1.2, "letterSpacing": "0", "family": "heading", "weight": 500 },
+    "h3": { "size": "1.375rem", "lineHeight": 1.3, "letterSpacing": "0", "family": "heading", "weight": 500 },
+    "body": { "size": "1rem", "lineHeight": 1.5, "letterSpacing": "0", "family": "body", "weight": 400 },
+    "bodySmall": { "size": "0.875rem", "lineHeight": 1.45, "letterSpacing": "0", "family": "body", "weight": 400 },
+    "label": { "size": "0.8125rem", "lineHeight": 1.3, "letterSpacing": "0.06em", "family": "body", "weight": 600, "transform": "uppercase" },
+    "numeric": { "size": "1rem", "lineHeight": 1.3, "letterSpacing": "0", "family": "body", "weight": 500, "feature": "tabular-nums" }
+  },
+  "space": {
+    "1": "4px",
+    "2": "8px",
+    "3": "12px",
+    "4": "16px",
+    "5": "24px",
+    "6": "32px",
+    "7": "48px",
+    "8": "64px",
+    "9": "96px"
+  },
+  "radius": {
+    "sm": "6px",
+    "md": "10px",
+    "lg": "16px",
+    "pill": "999px"
+  },
+  "shadow": {
+    "sm": "0 1px 2px rgba(43, 37, 30, 0.08)",
+    "md": "0 4px 12px rgba(43, 37, 30, 0.10)",
+    "lg": "0 12px 32px rgba(43, 37, 30, 0.14)"
+  },
+  "effect": {
+    "scanGradient": "linear-gradient(90deg, transparent, #15B8B0, transparent)"
+  }
+}

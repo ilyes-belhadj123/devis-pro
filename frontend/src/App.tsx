@@ -1,20 +1,27 @@
 import { NavLink, Route, Routes } from 'react-router-dom'
 import './App.css'
+import Logo from './components/Logo'
 import UploadPage from './pages/UploadPage'
 import DiagnosticPage from './pages/DiagnosticPage'
 import DevisPage from './pages/DevisPage'
+
+const steps = [
+  { to: '/', label: '1. Photo' },
+  { to: '/diagnostic', label: '2. Diagnostic' },
+  { to: '/devis', label: '3. Devis' },
+]
 
 function App() {
   return (
     <div className="app-shell">
       <header className="app-header">
-        <span className="app-logo">SnapDevis</span>
+        <Logo />
         <nav className="app-nav">
-          <NavLink to="/" end>
-            Upload
-          </NavLink>
-          <NavLink to="/diagnostic">Diagnostic</NavLink>
-          <NavLink to="/devis">Devis</NavLink>
+          {steps.map((step) => (
+            <NavLink key={step.to} to={step.to} end={step.to === '/'}>
+              {step.label}
+            </NavLink>
+          ))}
         </nav>
       </header>
 
@@ -25,6 +32,10 @@ function App() {
           <Route path="/devis" element={<DevisPage />} />
         </Routes>
       </main>
+
+      <footer className="app-footer">
+        <span>SnapDevis — prototype de démonstration</span>
+      </footer>
     </div>
   )
 }
