@@ -5,6 +5,7 @@ import UploadPage from './pages/UploadPage'
 import DiagnosticPage from './pages/DiagnosticPage'
 import DevisPage from './pages/DevisPage'
 import ParametresPage from './pages/ParametresPage'
+import DashboardPage from './pages/DashboardPage'
 
 const steps = [
   { to: '/', label: '1. Photo' },
@@ -23,7 +24,10 @@ function App() {
               {step.label}
             </NavLink>
           ))}
-          <NavLink to="/parametres" className="app-nav-settings" title="Paramètres">
+          <NavLink to="/dashboard" className="app-nav-tool" title="Dashboard (interne)">
+            📊
+          </NavLink>
+          <NavLink to="/parametres" className="app-nav-tool" title="Paramètres">
             ⚙
           </NavLink>
         </nav>
@@ -35,6 +39,7 @@ function App() {
           <Route path="/diagnostic" element={<DiagnosticPage />} />
           <Route path="/devis" element={<DevisPage />} />
           <Route path="/parametres" element={<ParametresPage />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
         </Routes>
       </main>
 

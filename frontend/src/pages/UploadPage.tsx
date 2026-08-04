@@ -2,6 +2,7 @@ import { useRef, useState, type DragEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { analyserPhoto } from '../api'
 import { mockDiagnostic } from '../mocks/mockData'
+import { compresserImage } from '../utils/compresserImage'
 import HeroGraphic from '../components/HeroGraphic'
 import './UploadPage.css'
 
@@ -12,11 +13,18 @@ function UploadPage() {
   const [photoUrl, setPhotoUrl] = useState<string | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [isPreparing, setIsPreparing] = useState(false)
 
-  const handleFile = (file: File | undefined) => {
+  const handleFile = async (file: File | undefined) => {
     if (!file) return
-    setPhotoFile(file)
-    setPhotoUrl(URL.createObjectURL(file))
+    setIsPreparing(true)
+    try {
+      const fichierPret = await compresserImage(file)
+      setPhotoFile(fichierPret)
+      setPhotoUrl(URL.createObjectURL(fichierPret))
+    } finally {
+      setIsPreparing(false)
+    }
   }
 
   const handleDrop = (event: DragEvent<HTMLDivElement>) => {
@@ -89,8 +97,13 @@ function UploadPage() {
             />
           </div>
 
-          <button type="button" className="btn btn-primary" disabled={!photoFile || isAnalyzing} onClick={analyser}>
-            {isAnalyzing ? 'Analyse en cours…' : 'Analyser la photo →'}
+          <button
+            type="button"
+            className="btn btn-primary"
+            disabled={!photoFile || isAnalyzing || isPreparing}
+            onClick={analyser}
+          >
+            {isPreparing ? 'Préparation de la photo…' : isAnalyzing ? 'Analyse en cours…' : 'Analyser la photo →'}
           </button>
         </div>
 

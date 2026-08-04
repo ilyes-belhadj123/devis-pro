@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import type { DevisApi } from '../api'
+import { exporterDevisPdf, trouverAlternative, type DevisApi } from '../api'
 import { mockDevis, type LigneDevis } from '../mocks/mockData'
 import './DevisPage.css'
 
@@ -23,11 +23,35 @@ function DevisPage() {
   const estDonneesReelles = Boolean(devisApi)
 
   const [lignes, setLignes] = useState<LigneDevis[]>(devisApi ? depuisDevisApi(devisApi) : mockDevis)
+  const [isExporting, setIsExporting] = useState(false)
+  const [erreurExport, setErreurExport] = useState<string | null>(null)
+  const [ligneEnRecherche, setLigneEnRecherche] = useState<string | null>(null)
+  const [messageAlternative, setMessageAlternative] = useState<string | null>(null)
 
   const total = useMemo(
     () => lignes.reduce((somme, ligne) => somme + ligne.quantite * ligne.prixUnitaire, 0),
     [lignes],
   )
+
+  const exporterPdf = async () => {
+    setIsExporting(true)
+    setErreurExport(null)
+    try {
+      const blob = await exporterDevisPdf(lignes)
+      const url = URL.createObjectURL(blob)
+      const lien = document.createElement('a')
+      lien.href = url
+      lien.download = 'devis-snapdevis.pdf'
+      document.body.appendChild(lien)
+      lien.click()
+      lien.remove()
+      URL.revokeObjectURL(url)
+    } catch {
+      setErreurExport("Impossible de générer le PDF pour le moment. Vérifiez que l'API backend est lancée.")
+    } finally {
+      setIsExporting(false)
+    }
+  }
 
   const modifierQuantite = (id: string, quantite: number) => {
     setLignes((precedent) =>
@@ -39,24 +63,49 @@ function DevisPage() {
     setLignes((precedent) => precedent.filter((ligne) => ligne.id !== id))
   }
 
-  const proposerAlternative = (id: string) => {
-    setLignes((precedent) =>
-      precedent.map((ligne) =>
-        ligne.id === id
-          ? { ...ligne, nom: `${ligne.nom.replace(/ \(alternative\)$/, '')} (alternative)`, prixUnitaire: Math.round(ligne.prixUnitaire * 0.8 * 100) / 100 }
-          : ligne,
-      ),
-    )
+  const proposerAlternative = async (ligne: LigneDevis) => {
+    setLigneEnRecherche(ligne.id)
+    setMessageAlternative(null)
+    try {
+      const resultat = await trouverAlternative(ligne.id, ligne.categorie, ligne.prixUnitaire)
+      if (!resultat.trouve || !resultat.reference) {
+        setMessageAlternative(`Aucune alternative moins chère disponible pour « ${ligne.nom} ».`)
+        return
+      }
+      setLignes((precedent) =>
+        precedent.map((l) =>
+          l.id === ligne.id
+            ? {
+                ...l,
+                id: resultat.reference as string,
+                nom: resultat.nom as string,
+                prixUnitaire: resultat.prix as number,
+                unite: resultat.unite as string,
+              }
+            : l,
+        ),
+      )
+    } catch {
+      setMessageAlternative("Impossible de proposer une alternative pour le moment.")
+    } finally {
+      setLigneEnRecherche(null)
+    }
   }
 
   return (
     <section className="page">
       <div className="devis-actions no-print">
         <span className="page-eyebrow">Étape 3 sur 3</span>
-        <button type="button" className="btn btn-primary" onClick={() => window.print()}>
-          Exporter en PDF
+        <button type="button" className="btn btn-primary" disabled={isExporting} onClick={exporterPdf}>
+          {isExporting ? 'Génération du PDF…' : 'Exporter en PDF'}
         </button>
       </div>
+
+      {erreurExport && (
+        <p className="no-print" style={{ fontSize: '0.8125rem', color: 'var(--color-state-error)' }}>
+          {erreurExport}
+        </p>
+      )}
 
       {!estDonneesReelles && (
         <p className="no-print" style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)' }}>
@@ -105,8 +154,13 @@ function DevisPage() {
                 <td className="text-numeric">{ligne.prixUnitaire.toFixed(2)} €</td>
                 <td className="text-numeric">{(ligne.quantite * ligne.prixUnitaire).toFixed(2)} €</td>
                 <td className="no-print devis-row-actions">
-                  <button type="button" className="btn-link" onClick={() => proposerAlternative(ligne.id)}>
-                    Alternative moins chère
+                  <button
+                    type="button"
+                    className="btn-link"
+                    disabled={ligneEnRecherche === ligne.id}
+                    onClick={() => proposerAlternative(ligne)}
+                  >
+                    {ligneEnRecherche === ligne.id ? 'Recherche…' : 'Alternative moins chère'}
                   </button>
                   <button type="button" className="btn-ghost" onClick={() => supprimerLigne(ligne.id)}>
                     Supprimer
@@ -121,6 +175,12 @@ function DevisPage() {
           <span>Total estimé</span>
           <span className="text-numeric devis-total-amount">{total.toFixed(2)} €</span>
         </div>
+
+        {messageAlternative && (
+          <p className="no-print" style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)' }}>
+            {messageAlternative}
+          </p>
+        )}
       </div>
     </section>
   )
