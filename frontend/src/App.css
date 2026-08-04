@@ -1,0 +1,82 @@
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  padding: 16px 32px;
+  border-bottom: 1px solid var(--border);
+}
+
+.app-logo {
+  font-weight: 700;
+  font-size: 20px;
+}
+
+.app-nav {
+  display: flex;
+  gap: 16px;
+}
+
+.app-nav a {
+  color: inherit;
+  text-decoration: none;
+  opacity: 0.7;
+}
+
+.app-nav a.active {
+  opacity: 1;
+  font-weight: 600;
+}
+
+.app-main {
+  flex: 1;
+  padding: 32px;
+}
+
+.page {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.dropzone {
+  border: 2px dashed var(--border);
+  border-radius: 8px;
+  padding: 48px;
+  text-align: center;
+  margin: 24px 0;
+}
+
+.clarification {
+  margin: 24px 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.devis-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 24px 0;
+}
+
+.devis-table th,
+.devis-table td {
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.devis-table input[type='number'] {
+  width: 56px;
+}
+
+.devis-total {
+  font-size: 20px;
+  font-weight: 700;
+  text-align: right;
+}

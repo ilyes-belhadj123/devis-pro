@@ -1,0 +1,20 @@
+# Node / frontend
+node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Python / backend
+backend/.venv/
+backend/__pycache__/
+**/__pycache__/
+*.pyc
+backend/.pytest_cache/
+
+# Env files (never commit secrets)
+.env
+.env.*
+!.env.example
+
+# Editor / OS
+.DS_Store
+Thumbs.db
