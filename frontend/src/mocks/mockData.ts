@@ -1,4 +1,5 @@
 export const mockDiagnostic = {
+  cle: 'mur_fissure_interieur',
   categorie: 'Peinture',
   probleme: 'Mur fissuré intérieur',
   confiance: 0.92,

@@ -1,11 +1,28 @@
 import { useMemo, useState } from 'react'
+import { useLocation } from 'react-router-dom'
+import type { DevisApi } from '../api'
 import { mockDevis, type LigneDevis } from '../mocks/mockData'
 import './DevisPage.css'
 
 const dateDuJour = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
 
+function depuisDevisApi(devis: DevisApi): LigneDevis[] {
+  return devis.lignes.map((ligne) => ({
+    id: ligne.reference,
+    nom: ligne.nom,
+    quantite: ligne.quantite,
+    prixUnitaire: ligne.prix_unitaire,
+    unite: ligne.unite,
+    categorie: ligne.categorie,
+  }))
+}
+
 function DevisPage() {
-  const [lignes, setLignes] = useState<LigneDevis[]>(mockDevis)
+  const location = useLocation()
+  const devisApi = (location.state as { devis?: DevisApi } | null)?.devis
+  const estDonneesReelles = Boolean(devisApi)
+
+  const [lignes, setLignes] = useState<LigneDevis[]>(devisApi ? depuisDevisApi(devisApi) : mockDevis)
 
   const total = useMemo(
     () => lignes.reduce((somme, ligne) => somme + ligne.quantite * ligne.prixUnitaire, 0),
@@ -40,6 +57,13 @@ function DevisPage() {
           Exporter en PDF
         </button>
       </div>
+
+      {!estDonneesReelles && (
+        <p className="no-print" style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)' }}>
+          Devis d'exemple (accès direct à l'écran) — passez par le parcours complet pour un devis généré à partir du
+          catalogue.
+        </p>
+      )}
 
       <div className="card devis-sheet">
         <header className="devis-sheet-header">

@@ -1,10 +1,22 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.catalogue.router import router as catalogue_router
+from app.core.config import settings
 from app.core.database import ping_database
+from app.devis.router import router as devis_router
 
 app = FastAPI(title="SnapDevis API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins_list,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(catalogue_router)
+app.include_router(devis_router)
 
 
 @app.get("/health")

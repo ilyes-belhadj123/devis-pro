@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { genererDevis, type DevisApi } from '../api'
 import { mockDiagnostic } from '../mocks/mockData'
 import './DiagnosticPage.css'
 
@@ -10,11 +11,26 @@ function DiagnosticPage() {
 
   const [isScanning, setIsScanning] = useState(true)
   const [reponse, setReponse] = useState<string | null>(null)
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [erreur, setErreur] = useState<string | null>(null)
 
   useEffect(() => {
     const timer = setTimeout(() => setIsScanning(false), 1800)
     return () => clearTimeout(timer)
   }, [])
+
+  const genererLeDevis = async () => {
+    setIsGenerating(true)
+    setErreur(null)
+    try {
+      const devis: DevisApi = await genererDevis(mockDiagnostic.cle)
+      navigate('/devis', { state: { devis } })
+    } catch {
+      setErreur('Le service de diagnostic est momentanément indisponible. Réessayez dans un instant.')
+    } finally {
+      setIsGenerating(false)
+    }
+  }
 
   return (
     <section className="page">
@@ -71,8 +87,10 @@ function DiagnosticPage() {
             </div>
           )}
 
-          <button type="button" className="btn btn-primary" onClick={() => navigate('/devis')}>
-            Générer le devis →
+          {erreur && <p style={{ color: 'var(--color-state-error)', fontSize: '0.875rem' }}>{erreur}</p>}
+
+          <button type="button" className="btn btn-primary" disabled={isGenerating} onClick={genererLeDevis}>
+            {isGenerating ? 'Génération du devis…' : 'Générer le devis →'}
           </button>
         </div>
       )}
