@@ -9,7 +9,7 @@ from app.core.database import database
 from app.core.runtime_config import get_openrouter_api_key
 
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
-MODELE = "anthropic/claude-3.5-sonnet"
+MODELE = "anthropic/claude-sonnet-5"
 
 PROBLEMES_CONNUS = [regle["probleme"] for regle in REGLES_ASSOCIATION]
 
