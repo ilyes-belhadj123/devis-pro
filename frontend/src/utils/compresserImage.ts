@@ -1,5 +1,9 @@
-const TAILLE_MAX_PX = 1600
-const QUALITE_JPEG = 0.82
+// 1568px correspond au redimensionnement interne des modeles de vision Claude : au-dela,
+// l'image est de toute facon redimensionnee cote IA sans gain de precision. La qualite JPEG
+// est volontairement elevee pour ne pas lisser les details fins (largeur d'une fissure,
+// texture d'un materiau) qui comptent pour un diagnostic precis.
+const TAILLE_MAX_PX = 1568
+const QUALITE_JPEG = 0.92
 
 /**
  * Redimensionne et recompresse une image côté client avant envoi (TICKET-006).
