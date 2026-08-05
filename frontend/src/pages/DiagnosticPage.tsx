@@ -94,6 +94,13 @@ function DiagnosticPage() {
             </div>
           </div>
 
+          {diagnostic.observations_visuelles && (
+            <p className="observations-visuelles">
+              <span className="observations-visuelles-label">Ce que l'IA a observé sur la photo :</span>{' '}
+              {diagnostic.observations_visuelles}
+            </p>
+          )}
+
           {diagnostic.degrade && (
             <p style={{ fontSize: '0.8125rem', color: 'var(--color-state-warning)' }}>
               Diagnostic simulé — configurez votre clé OpenRouter dans{' '}

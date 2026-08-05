@@ -81,6 +81,20 @@
   align-items: flex-start;
 }
 
+.observations-visuelles {
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+  background: var(--color-bg-surface-sunken);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  line-height: 1.5;
+}
+
+.observations-visuelles-label {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
 .clarification {
   width: 100%;
   margin: var(--space-3) 0;

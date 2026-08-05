@@ -53,6 +53,7 @@ export async function genererDevis(probleme: string, sessionId?: string | null):
 export type DiagnosticApi = {
   probleme_cle: string
   probleme_label: string
+  observations_visuelles?: string
   categorie: string
   confiance: number
   questions_clarification: string[]
