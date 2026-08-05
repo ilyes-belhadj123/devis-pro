@@ -46,8 +46,8 @@ function DevisPage() {
       lien.click()
       lien.remove()
       URL.revokeObjectURL(url)
-    } catch {
-      setErreurExport("Impossible de générer le PDF pour le moment. Vérifiez que l'API backend est lancée.")
+    } catch (err) {
+      setErreurExport(err instanceof Error ? err.message : "Impossible de générer le PDF pour le moment.")
     } finally {
       setIsExporting(false)
     }
@@ -85,8 +85,8 @@ function DevisPage() {
             : l,
         ),
       )
-    } catch {
-      setMessageAlternative("Impossible de proposer une alternative pour le moment.")
+    } catch (err) {
+      setMessageAlternative(err instanceof Error ? err.message : "Impossible de proposer une alternative pour le moment.")
     } finally {
       setLigneEnRecherche(null)
     }

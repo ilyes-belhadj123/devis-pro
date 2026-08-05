@@ -1,10 +1,11 @@
 import base64
 import json
-import re
+import unicodedata
 
 import httpx
 
 from app.catalogue.seed_data import REGLES_ASSOCIATION
+from app.core.ai_utils import extraire_json
 from app.core.database import database
 from app.core.runtime_config import get_openrouter_api_key
 
@@ -30,13 +31,6 @@ class DiagnosticIndisponible(Exception):
     pass
 
 
-def _extraire_json(texte: str) -> dict:
-    correspondance = re.search(r"\{.*\}", texte, re.DOTALL)
-    if not correspondance:
-        raise DiagnosticIndisponible("Reponse du modele sans JSON exploitable")
-    return json.loads(correspondance.group(0))
-
-
 async def _categorie_pour_probleme(probleme_cle: str) -> str:
     regle = await database.regles_association.find_one({"probleme": probleme_cle})
     if not regle:
@@ -45,12 +39,21 @@ async def _categorie_pour_probleme(probleme_cle: str) -> str:
     return produit["categorie"] if produit else "indetermine"
 
 
+def _sans_accents(texte: str) -> str:
+    return "".join(c for c in unicodedata.normalize("NFD", texte) if unicodedata.category(c) != "Mn")
+
+
 def _basculer_interieur_exterieur(probleme_cle: str, reponse: str) -> str:
-    reponse_normalisee = reponse.strip().lower()
+    # reponse libre (pas seulement les suggestions rapides) : on tolere la casse,
+    # les accents et quelques synonymes courants plutot qu'une correspondance exacte.
+    reponse_normalisee = _sans_accents(reponse.strip().lower())
+    est_exterieur = "exterieur" in reponse_normalisee or "dehors" in reponse_normalisee
+    est_interieur = "interieur" in reponse_normalisee or "dedans" in reponse_normalisee
+
     bascule = None
-    if reponse_normalisee == "extérieur" and probleme_cle.endswith("_interieur"):
+    if est_exterieur and probleme_cle.endswith("_interieur"):
         bascule = probleme_cle.replace("_interieur", "_exterieur")
-    elif reponse_normalisee == "intérieur" and probleme_cle.endswith("_exterieur"):
+    elif est_interieur and probleme_cle.endswith("_exterieur"):
         bascule = probleme_cle.replace("_exterieur", "_interieur")
     return bascule if bascule in PROBLEMES_CONNUS else probleme_cle
 
@@ -117,9 +120,9 @@ async def analyser_photo(contenu_image: bytes, content_type: str, contexte_clari
 
     try:
         contenu_reponse = data["choices"][0]["message"]["content"]
-        resultat = _extraire_json(contenu_reponse)
+        resultat = extraire_json(contenu_reponse)
         probleme_cle = resultat["probleme_cle"]
-    except (KeyError, IndexError, json.JSONDecodeError) as exc:
+    except (KeyError, IndexError, json.JSONDecodeError, ValueError) as exc:
         raise DiagnosticIndisponible(f"Reponse OpenRouter inattendue : {exc}") from exc
 
     categorie = await _categorie_pour_probleme(probleme_cle)

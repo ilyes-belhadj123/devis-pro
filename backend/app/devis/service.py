@@ -1,20 +1,11 @@
-import json
-import re
-
 import httpx
 
+from app.core.ai_utils import extraire_json
 from app.core.database import database
 from app.core.runtime_config import get_openrouter_api_key
 
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 MODELE = "anthropic/claude-sonnet-5"
-
-
-def _extraire_json(texte: str) -> dict:
-    correspondance = re.search(r"\{.*\}", texte, re.DOTALL)
-    if not correspondance:
-        raise ValueError("Reponse du modele sans JSON exploitable")
-    return json.loads(correspondance.group(0))
 
 
 async def _demander_choix_ia(nom_actuel: str, candidats: list[dict]) -> dict | None:
@@ -40,7 +31,7 @@ async def _demander_choix_ia(nom_actuel: str, candidats: list[dict]) -> dict | N
             )
             response.raise_for_status()
             data = response.json()
-        resultat = _extraire_json(data["choices"][0]["message"]["content"])
+        resultat = extraire_json(data["choices"][0]["message"]["content"])
         reference_choisie = resultat.get("reference")
     except (httpx.HTTPError, KeyError, IndexError, ValueError):
         return None

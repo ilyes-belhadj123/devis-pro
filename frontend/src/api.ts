@@ -1,5 +1,19 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8010'
 
+async function lireDetailErreur(response: Response): Promise<string | null> {
+  try {
+    const corps = await response.json()
+    return typeof corps?.detail === 'string' ? corps.detail : null
+  } catch {
+    return null
+  }
+}
+
+async function lancerErreur(response: Response, messageParDefaut: string): Promise<never> {
+  const detail = await lireDetailErreur(response)
+  throw new Error(detail ?? messageParDefaut)
+}
+
 export type LigneDevisApi = {
   reference: string
   nom: string
@@ -30,7 +44,7 @@ export async function genererDevis(probleme: string): Promise<DevisApi> {
   })
 
   if (!response.ok) {
-    throw new Error(`Erreur ${response.status} lors de la génération du devis`)
+    await lancerErreur(response, `Erreur ${response.status} lors de la génération du devis`)
   }
 
   return response.json()
@@ -56,7 +70,7 @@ export async function analyserPhoto(fichier: File): Promise<DiagnosticApi> {
   })
 
   if (!response.ok) {
-    throw new Error(`Erreur ${response.status} lors de l'analyse de la photo`)
+    await lancerErreur(response, `Erreur ${response.status} lors de l'analyse de la photo`)
   }
 
   return response.json()
@@ -77,7 +91,7 @@ export async function affinerDiagnostic(
   })
 
   if (!response.ok) {
-    throw new Error(`Erreur ${response.status} lors de l'affinage du diagnostic`)
+    await lancerErreur(response, `Erreur ${response.status} lors de l'affinage du diagnostic`)
   }
 
   return response.json()
@@ -107,7 +121,7 @@ export async function exporterDevisPdf(lignes: LigneDevisPourPdf[]): Promise<Blo
   })
 
   if (!response.ok) {
-    throw new Error(`Erreur ${response.status} lors de l'export PDF`)
+    await lancerErreur(response, `Erreur ${response.status} lors de l'export PDF`)
   }
 
   return response.blob()
@@ -137,7 +151,7 @@ export async function trouverAlternative(
   })
 
   if (!response.ok) {
-    throw new Error(`Erreur ${response.status} lors de la recherche d'alternative`)
+    await lancerErreur(response, `Erreur ${response.status} lors de la recherche d'alternative`)
   }
 
   return response.json()
@@ -161,7 +175,7 @@ export type StatistiquesApi = {
 export async function getStatistiques(): Promise<StatistiquesApi> {
   const response = await fetch(`${API_URL}/devis/statistiques`)
   if (!response.ok) {
-    throw new Error(`Erreur ${response.status}`)
+    await lancerErreur(response, `Erreur ${response.status} lors du chargement des statistiques`)
   }
   return response.json()
 }
@@ -177,7 +191,7 @@ export type HistoriqueResumeApi = {
 export async function getHistorique(): Promise<HistoriqueResumeApi[]> {
   const response = await fetch(`${API_URL}/devis/historique`)
   if (!response.ok) {
-    throw new Error(`Erreur ${response.status}`)
+    await lancerErreur(response, `Erreur ${response.status} lors du chargement de l'historique`)
   }
   return response.json()
 }
@@ -185,7 +199,7 @@ export async function getHistorique(): Promise<HistoriqueResumeApi[]> {
 export async function getHistoriqueDetail(sessionId: string): Promise<DevisApi> {
   const response = await fetch(`${API_URL}/devis/historique/${sessionId}`)
   if (!response.ok) {
-    throw new Error(`Erreur ${response.status}`)
+    await lancerErreur(response, `Erreur ${response.status} lors du chargement du devis`)
   }
   return response.json()
 }
@@ -193,7 +207,7 @@ export async function getHistoriqueDetail(sessionId: string): Promise<DevisApi> 
 export async function getStatutCleOpenRouter(): Promise<{ configuree: boolean }> {
   const response = await fetch(`${API_URL}/parametres/openrouter`)
   if (!response.ok) {
-    throw new Error(`Erreur ${response.status}`)
+    await lancerErreur(response, `Erreur ${response.status} lors de la lecture du statut de la clé`)
   }
   return response.json()
 }
@@ -205,7 +219,7 @@ export async function definirCleOpenRouter(apiKey: string): Promise<{ configuree
     body: JSON.stringify({ api_key: apiKey }),
   })
   if (!response.ok) {
-    throw new Error(`Erreur ${response.status}`)
+    await lancerErreur(response, `Erreur ${response.status} lors de l'enregistrement de la clé`)
   }
   return response.json()
 }

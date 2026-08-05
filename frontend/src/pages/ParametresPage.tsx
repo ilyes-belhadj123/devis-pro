@@ -25,8 +25,8 @@ function ParametresPage() {
       setConfiguree(res.configuree)
       setValeur('')
       setStatutMessage('Clé enregistrée. Le diagnostic IA utilisera cette clé pour les prochaines analyses.')
-    } catch {
-      setErreur("Impossible d'enregistrer la clé — vérifiez que l'API backend est bien lancée.")
+    } catch (err) {
+      setErreur(err instanceof Error ? err.message : "Impossible d'enregistrer la clé.")
     } finally {
       setIsSaving(false)
     }

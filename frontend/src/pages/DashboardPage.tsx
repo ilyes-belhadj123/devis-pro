@@ -9,7 +9,7 @@ function DashboardPage() {
   useEffect(() => {
     getStatistiques()
       .then(setStats)
-      .catch(() => setErreur("Impossible de charger les statistiques — vérifiez que l'API backend est lancée."))
+      .catch((err) => setErreur(err instanceof Error ? err.message : 'Impossible de charger les statistiques.'))
   }, [])
 
   return (

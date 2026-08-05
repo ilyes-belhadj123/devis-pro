@@ -39,7 +39,8 @@ function UploadPage() {
     try {
       const diagnostic = await analyserPhoto(photoFile)
       navigate('/diagnostic', { state: { photoUrl, diagnostic } })
-    } catch {
+    } catch (err) {
+      console.error('Analyse photo indisponible, bascule en mode dégradé :', err)
       navigate('/diagnostic', { state: { photoUrl, diagnostic: { ...mockDiagnostic, degrade: true } } })
     } finally {
       setIsAnalyzing(false)
@@ -66,6 +67,12 @@ function UploadPage() {
             onDragLeave={() => setIsDragging(false)}
             onDrop={handleDrop}
             onClick={() => inputRef.current?.click()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                inputRef.current?.click()
+              }
+            }}
             role="button"
             tabIndex={0}
           >

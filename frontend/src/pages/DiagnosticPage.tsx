@@ -21,6 +21,7 @@ function DiagnosticPage() {
   const [diagnostic, setDiagnostic] = useState<DiagnosticApi>(state?.diagnostic ?? mockDiagnostic)
   const [isScanning, setIsScanning] = useState(true)
   const [reponseChoisie, setReponseChoisie] = useState<string | null>(null)
+  const [reponseLibre, setReponseLibre] = useState('')
   const [isAffining, setIsAffining] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const [erreur, setErreur] = useState<string | null>(null)
@@ -31,14 +32,15 @@ function DiagnosticPage() {
   }, [])
 
   const repondreClarification = async (reponse: string) => {
+    if (!reponse.trim()) return
     setReponseChoisie(reponse)
     setIsAffining(true)
     setErreur(null)
     try {
       const diagnosticAffine = await affinerDiagnostic(diagnostic, reponse)
       setDiagnostic(diagnosticAffine)
-    } catch {
-      setErreur("Impossible d'affiner le diagnostic pour le moment.")
+    } catch (err) {
+      setErreur(err instanceof Error ? err.message : "Impossible d'affiner le diagnostic pour le moment.")
     } finally {
       setIsAffining(false)
     }
@@ -50,8 +52,12 @@ function DiagnosticPage() {
     try {
       const devis: DevisApi = await genererDevis(diagnostic.probleme_cle)
       navigate('/devis', { state: { devis } })
-    } catch {
-      setErreur('Le service de diagnostic est momentanément indisponible. Réessayez dans un instant.')
+    } catch (err) {
+      setErreur(
+        err instanceof Error
+          ? err.message
+          : 'Le service de diagnostic est momentanément indisponible. Réessayez dans un instant.',
+      )
     } finally {
       setIsGenerating(false)
     }
@@ -103,23 +109,41 @@ function DiagnosticPage() {
                 Une dernière précision
               </h3>
               {diagnostic.questions_clarification.map((question) => (
-                <div key={question} className="clarification-question">
-                  <p>{question}</p>
-                  <div className="clarification-options">
-                    {['Intérieur', 'Extérieur'].map((option) => (
-                      <button
-                        key={option}
-                        type="button"
-                        disabled={isAffining}
-                        className={`btn btn-secondary ${reponseChoisie === option ? 'clarification-selected' : ''}`}
-                        onClick={() => repondreClarification(option)}
-                      >
-                        {isAffining && reponseChoisie === option ? '…' : option}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                <p key={question}>{question}</p>
               ))}
+
+              <form
+                className="clarification-form"
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  repondreClarification(reponseLibre)
+                }}
+              >
+                <input
+                  type="text"
+                  placeholder="Votre réponse…"
+                  value={reponseLibre}
+                  onChange={(e) => setReponseLibre(e.target.value)}
+                  disabled={isAffining}
+                />
+                <button type="submit" className="btn btn-secondary" disabled={isAffining || !reponseLibre.trim()}>
+                  {isAffining && reponseChoisie === reponseLibre ? '…' : 'Valider'}
+                </button>
+              </form>
+
+              <div className="clarification-options">
+                {['Intérieur', 'Extérieur'].map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    className="btn-link"
+                    disabled={isAffining}
+                    onClick={() => repondreClarification(option)}
+                  >
+                    {isAffining && reponseChoisie === option ? '…' : option}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 

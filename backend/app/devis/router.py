@@ -28,7 +28,7 @@ router = APIRouter(prefix="/devis", tags=["devis"])
 async def generer_devis(diagnostic: DiagnosticInput) -> DevisGenere:
     regle = await database.regles_association.find_one({"probleme": diagnostic.probleme})
     if regle is None:
-        raise HTTPException(status_code=404, detail=f"Aucune regle d'association pour '{diagnostic.probleme}'")
+        raise HTTPException(status_code=404, detail=f"Aucune règle d'association pour '{diagnostic.probleme}'")
 
     produits = await database.produits.find(
         {"reference": {"$in": regle["references_produits"]}}, {"_id": 0}

@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class DiagnosticInput(BaseModel):
@@ -12,9 +12,9 @@ class LigneDevis(BaseModel):
     nom: str
     categorie: str
     unite: str
-    prix_unitaire: float
-    quantite: int
-    sous_total: float
+    prix_unitaire: float = Field(ge=0)
+    quantite: int = Field(ge=0)
+    sous_total: float = Field(ge=0)
 
 
 class GroupeCategorie(BaseModel):
@@ -33,8 +33,8 @@ class LigneDevisPdfInput(BaseModel):
     nom: str
     categorie: str
     unite: str
-    prix_unitaire: float
-    quantite: float
+    prix_unitaire: float = Field(ge=0)
+    quantite: float = Field(ge=0)
 
 
 class DevisPdfInput(BaseModel):
@@ -44,7 +44,7 @@ class DevisPdfInput(BaseModel):
 class AlternativeInput(BaseModel):
     reference_actuelle: str
     categorie: str
-    prix_actuel: float
+    prix_actuel: float = Field(ge=0)
 
 
 class AlternativeResultat(BaseModel):

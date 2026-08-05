@@ -11,7 +11,7 @@ function HistoriquePage() {
   useEffect(() => {
     getHistorique()
       .then(setSessions)
-      .catch(() => setErreur("Impossible de charger l'historique — vérifiez que l'API backend est lancée."))
+      .catch((err) => setErreur(err instanceof Error ? err.message : "Impossible de charger l'historique."))
   }, [])
 
   const revoir = async (sessionId: string) => {
@@ -19,8 +19,8 @@ function HistoriquePage() {
     try {
       const devis = await getHistoriqueDetail(sessionId)
       navigate('/devis', { state: { devis } })
-    } catch {
-      setErreur('Impossible de charger ce devis pour le moment.')
+    } catch (err) {
+      setErreur(err instanceof Error ? err.message : 'Impossible de charger ce devis pour le moment.')
     } finally {
       setSessionEnChargement(null)
     }
