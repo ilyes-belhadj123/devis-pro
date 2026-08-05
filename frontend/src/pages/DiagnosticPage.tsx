@@ -3,15 +3,8 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { affinerDiagnostic, genererDevis, type DevisApi, type DiagnosticApi } from '../api'
 import Alert from '../components/Alert'
 import { mockDiagnostic } from '../mocks/mockData'
+import { iconePourCategorie } from '../utils/iconesCategorie'
 import './DiagnosticPage.css'
-
-const ICONES_CATEGORIE: Record<string, string> = {
-  peinture: '🎨',
-  plomberie: '🔧',
-  fixation: '🪛',
-  electricite: '💡',
-  jardin: '🌱',
-}
 
 function DiagnosticPage() {
   const navigate = useNavigate()
@@ -87,7 +80,7 @@ function DiagnosticPage() {
       {!isScanning && (
         <div className="card diagnostic-result">
           <div className="diagnostic-result-head">
-            <span className="icon-badge">{ICONES_CATEGORIE[diagnostic.categorie] ?? '🛠️'}</span>
+            <span className="icon-badge">{iconePourCategorie(diagnostic.categorie)}</span>
             <div>
               <span className="badge">● {Math.round(diagnostic.confiance * 100)}% de confiance</span>
               <h2 className="diagnostic-result-title">{diagnostic.probleme_label}</h2>

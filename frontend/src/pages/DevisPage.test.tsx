@@ -13,15 +13,17 @@ describe('DevisPage', () => {
     expect(screen.getByText('28.60 €')).toBeInTheDocument()
   })
 
-  it('recalcule le total quand on modifie une quantite', () => {
+  it('recalcule le total quand on augmente une quantite via le stepper', () => {
     render(
       <MemoryRouter>
         <DevisPage />
       </MemoryRouter>,
     )
-    const premiereQuantite = screen.getAllByRole('spinbutton')[0]
-    fireEvent.change(premiereQuantite, { target: { value: '3' } })
+    const boutonPlus = screen.getAllByLabelText('Augmenter la quantité')[0]
+    fireEvent.click(boutonPlus)
+    fireEvent.click(boutonPlus)
 
+    // Enduit de rebouchage 8.90 x3 = 26.70, +4.50+12.00+3.20 = 46.40
     expect(screen.getByText('46.40 €')).toBeInTheDocument()
   })
 

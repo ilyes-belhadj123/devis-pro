@@ -242,14 +242,6 @@
 }
 
 @media (max-width: 640px) {
-  /* le devis a trop de colonnes (produit, categorie, qte, prix, sous-total, actions)
-     pour tenir sur un ecran de telephone : on force le defilement horizontal plutot
-     que de compresser illisiblement chaque colonne. Les tableaux plus simples
-     (historique, dashboard) restent en width:100% et ne defilent que si necessaire. */
-  .devis-table-wide {
-    min-width: 560px;
-  }
-
   .table-scroll-hint {
     display: block;
   }

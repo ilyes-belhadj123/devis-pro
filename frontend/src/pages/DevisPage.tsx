@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom'
 import { exporterDevisPdf, trouverAlternative, type DevisApi } from '../api'
 import Alert from '../components/Alert'
 import { mockDevis, type LigneDevis } from '../mocks/mockData'
+import { iconePourCategorie } from '../utils/iconesCategorie'
 import './DevisPage.css'
 
 const dateDuJour = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
@@ -95,21 +96,17 @@ function DevisPage() {
 
   return (
     <section className="page">
-      <div className="devis-actions no-print">
+      <div className="devis-actions">
         <span className="page-eyebrow">Étape 3 sur 3</span>
         <button type="button" className="btn btn-primary" disabled={isExporting} onClick={exporterPdf}>
           {isExporting ? 'Génération du PDF…' : 'Exporter en PDF'}
         </button>
       </div>
 
-      {erreurExport && (
-        <Alert type="error" className="no-print">
-          {erreurExport}
-        </Alert>
-      )}
+      {erreurExport && <Alert type="error">{erreurExport}</Alert>}
 
       {!estDonneesReelles && (
-        <Alert type="info" className="no-print">
+        <Alert type="info">
           Devis d'exemple (accès direct à l'écran) — passez par le parcours complet pour un devis généré à partir du
           catalogue.
         </Alert>
@@ -126,65 +123,68 @@ function DevisPage() {
           <span className="badge">Session #A1B2C3</span>
         </header>
 
-        <div className="table-scroll">
-          <table className="devis-table devis-table-wide">
-            <thead>
-              <tr>
-                <th>Produit</th>
-                <th>Catégorie</th>
-                <th>Qté</th>
-                <th>Prix unit.</th>
-                <th>Sous-total</th>
-                <th className="no-print"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {lignes.map((ligne) => (
-                <tr key={ligne.id}>
-                  <td>{ligne.nom}</td>
-                  <td>{ligne.categorie}</td>
-                  <td>
-                    <input
-                      type="number"
-                      min={0}
-                      className="qty-input no-print"
-                      value={ligne.quantite}
-                      onChange={(e) => modifierQuantite(ligne.id, Number(e.target.value))}
-                    />
-                    <span className="print-only">{ligne.quantite}</span> {ligne.unite}
-                  </td>
-                  <td className="text-numeric">{ligne.prixUnitaire.toFixed(2)} €</td>
-                  <td className="text-numeric">{(ligne.quantite * ligne.prixUnitaire).toFixed(2)} €</td>
-                  <td className="no-print devis-row-actions">
-                    <button
-                      type="button"
-                      className="btn-link"
-                      disabled={ligneEnRecherche === ligne.id}
-                      onClick={() => proposerAlternative(ligne)}
-                    >
-                      {ligneEnRecherche === ligne.id ? 'Recherche…' : 'Alternative moins chère'}
-                    </button>
-                    <button type="button" className="btn-ghost" onClick={() => supprimerLigne(ligne.id)}>
-                      Supprimer
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <p className="table-scroll-hint">← Faites glisser pour voir tout le tableau →</p>
+        <ul className="devis-liste">
+          {lignes.map((ligne) => (
+            <li className="devis-item" key={ligne.id}>
+              <span className="devis-item-icon">{iconePourCategorie(ligne.categorie)}</span>
+
+              <div className="devis-item-corps">
+                <span className="devis-item-nom">{ligne.nom}</span>
+                <span className="devis-item-categorie">{ligne.categorie}</span>
+                <div className="devis-item-actions">
+                  <button
+                    type="button"
+                    className="btn-link"
+                    disabled={ligneEnRecherche === ligne.id}
+                    onClick={() => proposerAlternative(ligne)}
+                  >
+                    {ligneEnRecherche === ligne.id ? 'Recherche…' : 'Alternative moins chère'}
+                  </button>
+                  <button type="button" className="btn-ghost" onClick={() => supprimerLigne(ligne.id)}>
+                    Supprimer
+                  </button>
+                </div>
+              </div>
+
+              <div className="devis-item-qty">
+                <button
+                  type="button"
+                  className="qty-btn"
+                  aria-label="Diminuer la quantité"
+                  disabled={ligne.quantite <= 0}
+                  onClick={() => modifierQuantite(ligne.id, ligne.quantite - 1)}
+                >
+                  −
+                </button>
+                <span className="qty-value">{ligne.quantite}</span>
+                <button
+                  type="button"
+                  className="qty-btn"
+                  aria-label="Augmenter la quantité"
+                  onClick={() => modifierQuantite(ligne.id, ligne.quantite + 1)}
+                >
+                  +
+                </button>
+              </div>
+
+              <div className="devis-item-prix">
+                <span className="devis-item-prix-unitaire">
+                  {ligne.prixUnitaire.toFixed(2)} € / {ligne.unite}
+                </span>
+                <span className="devis-item-sous-total text-numeric">
+                  {(ligne.quantite * ligne.prixUnitaire).toFixed(2)} €
+                </span>
+              </div>
+            </li>
+          ))}
+        </ul>
 
         <div className="devis-total-row">
           <span>Total estimé</span>
           <span className="text-numeric devis-total-amount">{total.toFixed(2)} €</span>
         </div>
 
-        {messageAlternative && (
-          <Alert type="info" className="no-print">
-            {messageAlternative}
-          </Alert>
-        )}
+        {messageAlternative && <Alert type="info">{messageAlternative}</Alert>}
       </div>
     </section>
   )

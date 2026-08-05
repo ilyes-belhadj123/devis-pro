@@ -25,43 +25,115 @@
   color: var(--color-accent-copper);
 }
 
-.devis-table {
-  width: 100%;
-  border-collapse: collapse;
+.devis-liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
 }
 
-.devis-table th {
-  text-align: left;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--color-text-secondary);
-  padding: var(--space-2) var(--space-2);
+.devis-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4) 0;
   border-bottom: 1px solid var(--color-border-default);
 }
 
-.devis-table td {
-  padding: var(--space-3) var(--space-2);
-  border-bottom: 1px solid var(--color-border-default);
+.devis-item-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.375rem;
+  background: var(--color-accent-copper-soft);
+  flex-shrink: 0;
+}
+
+.devis-item-corps {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.devis-item-nom {
+  font-weight: 600;
   font-size: 0.9375rem;
 }
 
-.qty-input {
-  width: 52px;
-  padding: 2px 6px;
-  border: 1px solid var(--color-border-default);
-  border-radius: var(--radius-sm);
-  font-family: var(--font-body);
+.devis-item-categorie {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
-.print-only {
-  display: none;
-}
-
-.devis-row-actions {
+.devis-item-actions {
   display: flex;
   gap: var(--space-3);
+  margin-top: var(--space-1);
+}
+
+.devis-item-qty {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+
+.qty-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: var(--color-bg-surface-sunken);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--color-text-primary);
+  line-height: 1;
+}
+
+.qty-btn:hover {
+  background: var(--color-accent-tech-soft);
+}
+
+.qty-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.qty-value {
+  min-width: 32px;
+  text-align: center;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-feature-settings: 'tnum';
+  font-size: 0.9375rem;
+}
+
+.devis-item-prix {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  min-width: 92px;
+}
+
+.devis-item-prix-unitaire {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
   white-space: nowrap;
+}
+
+.devis-item-sous-total {
+  font-weight: 600;
+  font-size: 1rem;
 }
 
 .btn-link {
@@ -90,23 +162,34 @@
   color: var(--color-accent-copper);
 }
 
-@media print {
-  .app-header,
-  .app-footer,
-  .no-print {
-    display: none !important;
+@media (max-width: 640px) {
+  .devis-item {
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+      'icon corps'
+      'qty prix';
+    row-gap: var(--space-3);
   }
 
-  .print-only {
-    display: inline;
+  .devis-item-icon {
+    grid-area: icon;
   }
 
-  .app-main {
-    padding: 0;
+  .devis-item-corps {
+    grid-area: corps;
   }
 
-  .card.devis-sheet {
-    box-shadow: none;
-    border: none;
+  .devis-item-actions {
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  .devis-item-qty {
+    grid-area: qty;
+    justify-self: start;
+  }
+
+  .devis-item-prix {
+    grid-area: prix;
   }
 }
