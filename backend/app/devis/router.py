@@ -5,7 +5,7 @@ from bson.errors import InvalidId
 from fastapi import APIRouter, HTTPException, Response
 
 from app.core.database import database
-from app.diagnostic.service import estimer_quantites
+from app.diagnostic.service import selectionner_materiel
 from app.diagnostic.session_store import recuperer_session
 from app.devis.models import (
     AlternativeInput,
@@ -32,26 +32,37 @@ async def generer_devis(diagnostic: DiagnosticInput) -> DevisGenere:
     if regle is None:
         raise HTTPException(status_code=404, detail=f"Aucune règle d'association pour '{diagnostic.probleme}'")
 
-    produits = await database.produits.find(
-        {"reference": {"$in": regle["references_produits"]}}, {"_id": 0}
-    ).to_list()
-    produits_par_reference = {produit["reference"]: produit for produit in produits}
-
-    # on reconstruit dans l'ordre de la regle (le $in de Mongo ne garantit pas l'ordre) :
     # le premier produit de la regle est le "produit principal", celui que le client
-    # aurait achete seul sans SnapDevis - c'est la base du calcul panier moyen avant/apres.
-    produits_ordonnes = [
-        produit
-        for reference in regle["references_produits"]
-        if (produit := produits_par_reference.get(reference)) is not None
-    ]
-
-    # si une conversation de diagnostic existe (mesures, dimensions... donnees par le
-    # client), on demande a l'IA d'estimer des quantites realistes plutot que 1 par defaut.
-    quantites_estimees = await estimer_quantites(
-        recuperer_session(diagnostic.session_id) if diagnostic.session_id else None,
-        [{"reference": p["reference"], "nom": p["nom"], "unite": p["unite"]} for p in produits_ordonnes],
+    # aurait achete seul sans SnapDevis - c'est la base du calcul panier moyen avant/apres,
+    # et sert de repli quand il n'y a pas de conversation IA exploitable.
+    produit_principal = await database.produits.find_one(
+        {"reference": regle["references_produits"][0]}, {"_id": 0}
     )
+
+    session = recuperer_session(diagnostic.session_id) if diagnostic.session_id else None
+
+    materiel = None
+    if session is not None and produit_principal is not None:
+        # on donne a l'IA tout le catalogue de la categorie concernee (pas seulement la
+        # petite liste fixe de la regle) pour qu'elle choisisse elle-meme le materiel
+        # reellement necessaire a partir de la conversation (mesures, dimensions...).
+        catalogue_categorie = await database.produits.find(
+            {"categorie": produit_principal["categorie"]}, {"_id": 0}
+        ).to_list()
+        materiel = await selectionner_materiel(session, catalogue_categorie)
+
+    if materiel is None:
+        # repli : liste fixe de la regle d'association, quantite 1 (comportement historique,
+        # utilise sans conversation IA - acces direct, tests, ou service IA indisponible).
+        produits = await database.produits.find(
+            {"reference": {"$in": regle["references_produits"]}}, {"_id": 0}
+        ).to_list()
+        produits_par_reference = {produit["reference"]: produit for produit in produits}
+        materiel = [
+            {**produits_par_reference[reference], "quantite": 1}
+            for reference in regle["references_produits"]
+            if reference in produits_par_reference
+        ]
 
     lignes = [
         LigneDevis(
@@ -60,10 +71,10 @@ async def generer_devis(diagnostic: DiagnosticInput) -> DevisGenere:
             categorie=produit["categorie"],
             unite=produit["unite"],
             prix_unitaire=produit["prix"],
-            quantite=(quantites_estimees or {}).get(produit["reference"], 1),
-            sous_total=round(produit["prix"] * (quantites_estimees or {}).get(produit["reference"], 1), 2),
+            quantite=produit["quantite"],
+            sous_total=round(produit["prix"] * produit["quantite"], 2),
         )
-        for produit in produits_ordonnes
+        for produit in materiel
     ]
 
     groupes_par_categorie: dict[str, float] = {}
@@ -77,11 +88,11 @@ async def generer_devis(diagnostic: DiagnosticInput) -> DevisGenere:
 
     total = round(sum(ligne.sous_total for ligne in lignes), 2)
 
-    if lignes:
+    if lignes and produit_principal is not None:
         await database.historique_devis.insert_one(
             {
                 "probleme": diagnostic.probleme,
-                "produit_principal_prix": lignes[0].prix_unitaire,
+                "produit_principal_prix": produit_principal["prix"],
                 "total_complet": total,
                 "lignes": [ligne.model_dump() for ligne in lignes],
                 "date": datetime.now(timezone.utc),

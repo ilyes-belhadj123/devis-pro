@@ -32,13 +32,14 @@ PROMPT_SYSTEME = (
     "en francais si la confiance est inferieure a 0.75, sinon liste vide>]}"
 )
 
-PROMPT_QUANTITES_TEMPLATE = (
+PROMPT_MATERIEL_TEMPLATE = (
     "En te basant sur toute la conversation precedente (photo + precisions chiffrees apportees par le "
-    "client), estime une quantite realiste pour chacun des produits suivants necessaires pour ce projet "
-    "precis :\n{liste_candidats}\n\n"
-    "Reponds UNIQUEMENT avec un objet JSON valide du type "
-    '{{"quantites": {{"<reference>": <quantite entiere >= 1>, ...}}}}. Inclus obligatoirement toutes les '
-    "references listees ci-dessus, avec une quantite d'au moins 1 pour chacune."
+    "client), selectionne dans le catalogue suivant UNIQUEMENT les produits reellement necessaires pour "
+    "resoudre ce probleme precis, avec une quantite realiste pour chacun :\n{catalogue}\n\n"
+    "Ne selectionne pas systematiquement tout le catalogue : seulement ce qui est pertinent pour ce cas "
+    "precis, en te basant sur les mesures/quantites discutees. Reponds UNIQUEMENT avec un objet JSON valide "
+    'du type {{"produits": [{{"reference": "<reference du catalogue>", "quantite": <entier >= 1>}}, ...]}}. '
+    "Selectionne au moins 1 produit et au maximum 6."
 )
 
 
@@ -184,31 +185,36 @@ async def affiner_diagnostic(probleme_cle: str, reponse: str, session: dict | No
     return resultat, None
 
 
-async def estimer_quantites(session: dict | None, candidats: list[dict]) -> dict[str, int] | None:
-    """Estime une quantite par produit a partir de la conversation de diagnostic (mesures,
-    dimensions... donnees par le client). Renvoie None si indisponible (repli sur quantite=1)."""
-    if session is None or not session.get("messages"):
+async def selectionner_materiel(session: dict | None, catalogue: list[dict]) -> list[dict] | None:
+    """Laisse l'IA choisir, dans le catalogue de la categorie concernee, les produits
+    reellement necessaires (et leur quantite) a partir de toute la conversation de
+    diagnostic (mesures, dimensions...). Renvoie None si indisponible (repli sur la
+    regle d'association fixe, quantite=1)."""
+    if session is None or not session.get("messages") or not catalogue:
         return None
 
-    liste_candidats = "\n".join(f"- {c['reference']} : {c['nom']} ({c['unite']})" for c in candidats)
-    prompt = PROMPT_QUANTITES_TEMPLATE.format(liste_candidats=liste_candidats)
+    liste_catalogue = "\n".join(f"- {p['reference']} : {p['nom']} ({p['prix']:.2f} €, {p['unite']})" for p in catalogue)
+    prompt = PROMPT_MATERIEL_TEMPLATE.format(catalogue=liste_catalogue)
     messages = [*session["messages"], {"role": "user", "content": prompt}]
 
     try:
         texte_reponse = await _appeler_modele(messages)
         resultat = extraire_json(texte_reponse)
-        quantites_brutes = resultat["quantites"]
+        selection_brute = resultat["produits"]
     except (DiagnosticIndisponible, json.JSONDecodeError, ValueError, KeyError):
         return None
 
-    references_valides = {c["reference"] for c in candidats}
-    quantites: dict[str, int] = {}
-    for reference, quantite in quantites_brutes.items():
-        if reference not in references_valides:
-            continue
+    catalogue_par_reference = {p["reference"]: p for p in catalogue}
+    materiel: list[dict] = []
+    for item in selection_brute:
         try:
-            quantites[reference] = max(1, int(quantite))
-        except (TypeError, ValueError):
+            reference = item["reference"]
+            quantite = max(1, int(item["quantite"]))
+        except (KeyError, TypeError, ValueError):
             continue
+        produit = catalogue_par_reference.get(reference)
+        if produit is None:
+            continue
+        materiel.append({**produit, "quantite": quantite})
 
-    return quantites or None
+    return materiel or None

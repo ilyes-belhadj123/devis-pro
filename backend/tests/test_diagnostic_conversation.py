@@ -30,34 +30,42 @@ def test_continuer_conversation_accumule_les_messages(monkeypatch):
     assert nouveaux_messages[3]["role"] == "assistant"
 
 
-def test_estimer_quantites_filtre_les_references_invalides_et_convertit(monkeypatch):
+def test_selectionner_materiel_filtre_les_references_invalides_et_convertit(monkeypatch):
     async def fake_appeler_modele(messages):
-        return '{"quantites": {"PT-002": 3, "REF-INCONNUE": 5, "PT-008": "2"}}'
+        return (
+            '{"produits": [{"reference": "PT-002", "quantite": 3}, '
+            '{"reference": "REF-INCONNUE", "quantite": 5}, '
+            '{"reference": "PT-008", "quantite": "2"}]}'
+        )
 
     monkeypatch.setattr(service, "_appeler_modele", fake_appeler_modele)
 
     session = {"messages": [{"role": "system", "content": "..."}]}
-    candidats = [
-        {"reference": "PT-002", "nom": "Enduit", "unite": "pot"},
-        {"reference": "PT-008", "nom": "Spatule", "unite": "unité"},
+    catalogue = [
+        {"reference": "PT-002", "nom": "Enduit", "categorie": "peinture", "unite": "pot", "prix": 8.9},
+        {"reference": "PT-008", "nom": "Spatule", "categorie": "peinture", "unite": "unité", "prix": 4.5},
+        {"reference": "PT-009", "nom": "Ponceuse", "categorie": "peinture", "unite": "unité", "prix": 12.0},
     ]
 
-    quantites = asyncio.run(service.estimer_quantites(session, candidats))
+    materiel = asyncio.run(service.selectionner_materiel(session, catalogue))
 
-    assert quantites == {"PT-002": 3, "PT-008": 2}
-
-
-def test_estimer_quantites_sans_session_renvoie_none():
-    assert asyncio.run(service.estimer_quantites(None, [])) is None
+    # seules PT-002 et PT-008 sont retenues (reference inconnue ignoree, PT-009 non choisie par l'IA)
+    assert {p["reference"]: p["quantite"] for p in materiel} == {"PT-002": 3, "PT-008": 2}
+    assert all("nom" in p and "prix" in p for p in materiel)
 
 
-def test_estimer_quantites_reponse_ia_illisible_renvoie_none(monkeypatch):
+def test_selectionner_materiel_sans_session_renvoie_none():
+    assert asyncio.run(service.selectionner_materiel(None, [])) is None
+
+
+def test_selectionner_materiel_reponse_ia_illisible_renvoie_none(monkeypatch):
     async def fake_appeler_modele(messages):
         return "je ne comprends pas la demande"
 
     monkeypatch.setattr(service, "_appeler_modele", fake_appeler_modele)
 
     session = {"messages": [{"role": "system", "content": "..."}]}
-    quantites = asyncio.run(service.estimer_quantites(session, [{"reference": "PT-002", "nom": "Enduit", "unite": "pot"}]))
+    catalogue = [{"reference": "PT-002", "nom": "Enduit", "categorie": "peinture", "unite": "pot", "prix": 8.9}]
+    materiel = asyncio.run(service.selectionner_materiel(session, catalogue))
 
-    assert quantites is None
+    assert materiel is None
