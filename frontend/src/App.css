@@ -12,13 +12,7 @@
   gap: var(--space-6);
   padding: var(--space-4) var(--space-7);
   background-color: var(--color-bg-surface);
-  background-image: repeating-linear-gradient(
-    100deg,
-    rgba(43, 37, 30, 0.025) 0px,
-    rgba(43, 37, 30, 0.025) 1px,
-    transparent 1px,
-    transparent 3px
-  );
+  border-bottom: 1px solid var(--color-border-default);
 }
 
 .app-header::after {
@@ -26,8 +20,8 @@
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 0;
-  height: 3px;
+  bottom: -2px;
+  height: 2px;
   background: linear-gradient(90deg, var(--color-accent-copper), var(--color-accent-tech));
 }
 
@@ -124,8 +118,8 @@
 
 .page h1 {
   font-size: 2.25rem;
-  letter-spacing: -0.01em;
-  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-weight: 700;
 }
 
 .page-lead {
@@ -161,13 +155,13 @@
 }
 
 .btn-primary {
-  background: linear-gradient(160deg, #d17c40, var(--color-accent-copper) 60%);
+  background: linear-gradient(160deg, #ff7a5c, var(--color-accent-copper) 60%);
   color: var(--color-text-on-accent);
   box-shadow: var(--shadow-md);
 }
 
 .btn-primary:hover {
-  background: linear-gradient(160deg, #c06e34, var(--color-accent-copper-hover) 60%);
+  background: linear-gradient(160deg, #ff6644, var(--color-accent-copper-hover) 60%);
   box-shadow: var(--shadow-lg);
   transform: translateY(-1px);
 }

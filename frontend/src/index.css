@@ -1,32 +1,32 @@
 :root {
-  --color-bg-base: #f6f1e8;
-  --color-bg-surface: #fffdf9;
-  --color-bg-surface-sunken: #ede6d8;
+  --color-bg-base: #fbfaf8;
+  --color-bg-surface: #ffffff;
+  --color-bg-surface-sunken: #f3f1ed;
 
-  --color-text-primary: #2a2521;
-  --color-text-secondary: #6b6259;
+  --color-text-primary: #1f2129;
+  --color-text-secondary: #6b7280;
   --color-text-on-accent: #ffffff;
 
-  --color-border-default: #ded6c7;
-  --color-border-strong: #b8ada0;
+  --color-border-default: #e5e3dd;
+  --color-border-strong: #c9c6bc;
 
-  --color-accent-copper: #c1662f;
-  --color-accent-copper-hover: #a8551f;
-  --color-accent-copper-soft: #f3e0d2;
-  --color-accent-tech: #15b8b0;
-  --color-accent-tech-hover: #0f8f89;
-  --color-accent-tech-soft: #e3f7f5;
+  --color-accent-copper: #ff5a3c;
+  --color-accent-copper-hover: #e6431f;
+  --color-accent-copper-soft: #ffe3d6;
+  --color-accent-tech: #14b8a6;
+  --color-accent-tech-hover: #0d9488;
+  --color-accent-tech-soft: #ccfbf1;
 
-  --color-metal-100: #f1efec;
-  --color-metal-300: #d4d1cb;
-  --color-metal-500: #9c978d;
-  --color-metal-700: #5b5750;
+  --color-metal-100: #f4f4f5;
+  --color-metal-300: #d4d4d8;
+  --color-metal-500: #a1a1aa;
+  --color-metal-700: #52525b;
 
-  --color-state-success: #3f8f5f;
-  --color-state-warning: #d69a2d;
-  --color-state-error: #c1392b;
+  --color-state-success: #16a34a;
+  --color-state-warning: #d97706;
+  --color-state-error: #dc2626;
 
-  --font-heading: 'Fraunces', Georgia, serif;
+  --font-heading: 'Sora', system-ui, sans-serif;
   --font-body: 'Space Grotesk', system-ui, sans-serif;
 
   --space-1: 4px;
@@ -39,16 +39,16 @@
   --space-8: 64px;
   --space-9: 96px;
 
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
   --radius-pill: 999px;
 
-  --shadow-sm: 0 1px 2px rgba(43, 37, 30, 0.08);
-  --shadow-md: 0 4px 12px rgba(43, 37, 30, 0.1);
-  --shadow-lg: 0 12px 32px rgba(43, 37, 30, 0.14);
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 6px 16px rgba(15, 23, 42, 0.08);
+  --shadow-lg: 0 16px 36px rgba(15, 23, 42, 0.14);
 
-  --effect-scan-gradient: linear-gradient(90deg, transparent, #15b8b0, transparent);
+  --effect-scan-gradient: linear-gradient(90deg, transparent, #14b8a6, transparent);
 
   color-scheme: light;
 }
@@ -63,21 +63,8 @@ body {
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   background-color: var(--color-bg-base);
-  background-image: repeating-linear-gradient(
-      97deg,
-      rgba(120, 84, 48, 0.055) 0px,
-      rgba(120, 84, 48, 0.055) 1px,
-      transparent 1px,
-      transparent 8px
-    ),
-    repeating-linear-gradient(
-      97deg,
-      rgba(120, 84, 48, 0.03) 0px,
-      rgba(120, 84, 48, 0.03) 2px,
-      transparent 2px,
-      transparent 21px
-    ),
-    linear-gradient(165deg, #f9f4eb 0%, #f2ead9 55%, #ebe0c9 100%);
+  background-image: radial-gradient(circle at 100% 0%, rgba(255, 90, 60, 0.06), transparent 45%),
+    radial-gradient(circle at 0% 100%, rgba(20, 184, 166, 0.05), transparent 45%);
   background-attachment: fixed;
 }
 
@@ -86,7 +73,8 @@ h2,
 h3 {
   font-family: var(--font-heading);
   margin: 0;
-  font-weight: 500;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 p {

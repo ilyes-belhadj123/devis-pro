@@ -8,19 +8,19 @@
 }
 
 .alert-error {
-  background: rgba(193, 57, 43, 0.08);
+  background: rgba(220, 38, 38, 0.08);
   border-color: var(--color-state-error);
   color: var(--color-state-error);
 }
 
 .alert-warning {
-  background: rgba(214, 154, 45, 0.12);
+  background: rgba(217, 119, 6, 0.1);
   border-color: var(--color-state-warning);
-  color: #8a5a00;
+  color: #92400e;
 }
 
 .alert-success {
-  background: rgba(63, 143, 95, 0.08);
+  background: rgba(22, 163, 74, 0.08);
   border-color: var(--color-state-success);
   color: var(--color-state-success);
 }

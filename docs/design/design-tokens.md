@@ -1,60 +1,55 @@
-# SnapDevis — Design system (TICKET-001)
+# SnapDevis — Design system (v2, révisé après retours démo)
 
 ## Direction artistique
 
-**"Atelier premium"** : l'univers visuel doit évoquer le geste technique et le matériau (bois clair, métal brossé) sans tomber dans le "artisanal daté", et intégrer un accent technologique net qui rend le travail de l'IA tangible — sans ressembler à "un énième chatbot IA générique".
+**"Retail énergique"** : après une première direction "atelier premium" (bois clair, cuivre terne), le design a été révisé pour se rapprocher des codes visuels des sites e-commerce bricolage/déco qui convertissent bien (IKEA, Conforama) — sans copier leur identité (couleurs propres à SnapDevis, cf. note ci-dessous).
 
-- **Fond chaud** (linen / bois clair) plutôt que blanc pur ou gris SaaS générique.
-- **Encre charbon chaud** pour le texte, jamais de noir pur.
-- **Accent cuivre** (`copper`) comme couleur de marque — matière, chaleur, geste manuel — utilisé pour les actions principales et les éléments de marque.
-- **Accent teal** (`tech`) réservé exclusivement aux moments IA : ligne de scan photo → devis, badges de diagnostic, indicateurs de confiance. Il ne doit jamais se substituer au cuivre pour les actions standards — c'est ce qui rend le travail de l'IA "visible" pendant une démo.
-- Distinct des identités des enseignes ciblées (pas de vert Leroy Merlin, pas d'orange Bricorama, pas de bleu Castorama) et de l'identité Harington.
+- **Fond clair et net** (blanc / quasi-blanc) plutôt qu'une texture bois — plus universel, plus "produit fini" pour une démo commerciale.
+- **Accent corail** (`copper`, nom du token conservé) : couleur de marque vive, à fort contraste sur blanc, utilisée pour les CTA principaux. Choisie distincte du jaune IKEA, de l'orange Bricorama, du vert Leroy Merlin et du bleu Castorama pour rester une marque neutre, revendable en marque blanche (contrainte du cahier des charges).
+- **Accent teal** (`tech`) toujours réservé aux moments IA (scan, diagnostic, confiance) — inchangé, c'est ce qui rend le travail de l'IA visible pendant une démo.
+- **Espace généreux** et hiérarchie claire (inspiré de la lisibilité des grilles produit IKEA) plutôt qu'une mise en page dense.
 
 ## Typographie
 
 | Rôle | Police | Justification |
 |---|---|---|
-| Titres | **Fraunces** (serif variable) | Chaleur et caractère "matière" — évite le générique SaaS tout en restant premium, pas "daté artisanal". |
-| Texte / UI / chiffres | **Space Grotesk** (sans) | Précision géométrique, incarne l'"accent technologique net" ; excellent pour les prix (chiffres tabulaires) et les labels. |
+| Titres | **Sora** (sans, bold) | Géométrique, moderne, chaleureux sans être froid — lisible et "confiant" pour des titres d'accroche commerciale. |
+| Texte / UI / chiffres | **Space Grotesk** (sans) | Conservé : précision géométrique, excellent pour les prix (chiffres tabulaires) et les labels. |
 
-Échelle : `display` 44px → `h1` 36px → `h2` 28px → `h3` 22px → `body` 16px → `bodySmall` 14px → `label` 13px (majuscules, espacé).
+Une seule famille sans-serif dans toute l'app (plus de serif) pour une lecture plus rapide et un rendu plus "produit logiciel" que "éditorial".
 
 ## Couleurs
 
 | Token | Valeur | Usage |
 |---|---|---|
-| `background.base` | `#F6F1E8` | Fond général (linen / bois clair) |
-| `background.surface` | `#FFFDF9` | Cartes, panneaux |
-| `background.surfaceSunken` | `#EDE6D8` | Zones creuses (dropzone, sections secondaires) |
-| `text.primary` | `#2A2521` | Texte principal (charbon chaud) |
-| `text.secondary` | `#6B6259` | Texte secondaire |
-| `border.default` | `#DED6C7` | Bordures discrètes |
-| `border.strong` | `#B8ADA0` | Bordures marquées (métal brossé) |
-| `accent.copper` | `#C1662F` | Marque, CTA principal |
-| `accent.tech` | `#15B8B0` | IA / scan / diagnostic uniquement |
-| `metal.100 → 700` | `#F1EFEC → #5B5750` | Neutres "métal brossé" (fonds de badges, icônes, séparateurs) |
-| `state.success/warning/error` | `#3F8F5F` / `#D69A2D` / `#C1392B` | Feedback système |
+| `background.base` | `#FBFAF8` | Fond général (quasi-blanc) |
+| `background.surface` | `#FFFFFF` | Cartes, panneaux |
+| `background.surfaceSunken` | `#F3F1ED` | Zones creuses (dropzone, sections secondaires) |
+| `text.primary` | `#1F2129` | Texte principal |
+| `text.secondary` | `#6B7280` | Texte secondaire |
+| `border.default` | `#E5E3DD` | Bordures discrètes |
+| `border.strong` | `#C9C6BC` | Bordures marquées |
+| `accent.copper` | `#FF5A3C` | Marque, CTA principal (corail) |
+| `accent.tech` | `#14B8A6` | IA / scan / diagnostic uniquement |
+| `metal.100 → 700` | `#F4F4F5 → #52525B` | Neutres gris (fonds de badges, séparateurs) |
+| `state.success/warning/error` | `#16A34A` / `#D97706` / `#DC2626` | Feedback système |
 
-Ombres teintées chaudes (jamais de noir pur) : `shadow.sm/md/lg`, base `rgba(43, 37, 30, …)`.
+Ombres neutres froides (jamais teintées) : `shadow.sm/md/lg`, base `rgba(15, 23, 42, …)`.
 
-Effet dédié : `effect.scanGradient` — dégradé teal utilisé pour l'animation de balayage lors de la transition photo → devis (TICKET-002).
+Effet dédié : `effect.scanGradient` — dégradé teal utilisé pour l'animation de balayage lors de la transition photo → devis.
 
 ## Espacements et rayons
 
-Échelle d'espacement en base 4/8 (`space.1` à `space.9`, de 4px à 96px). Rayons `sm` 6px / `md` 10px / `lg` 16px / `pill` 999px — arrondis modérés, pour rester "structuré atelier" plutôt que "bulle SaaS".
+Échelle d'espacement en base 4/8 (`space.1` à `space.9`, de 4px à 96px). Rayons relevés par rapport à la v1 : `sm` 8px / `md` 12px / `lg` 20px / `pill` 999px — plus arrondis, plus "accessible/friendly" que la version atelier.
 
-## Propositions de wordmark (3)
+## Wordmark
 
-1. **`Snap·Devis`** — "Snap" en Space Grotesk semibold cuivre, séparateur point en teal, "Devis" en Fraunces regular charbon. Évoque à la fois le déclic photo (Snap) et le document (Devis).
-2. **`SNAPDEVIS`** — capitales Space Grotesk, monospatiale visuelle, avec une entaille diagonale teal traversant le "A" central façon ligne de scan.
-3. **`snap`Devis** — "snap" en Fraunces italic minuscule (geste, matière), "Devis" en Space Grotesk majuscules (précision), soulignés d'une barre d'accent teal.
+`Snap·Devis` conservé — "Snap" en corail, séparateur point en teal, "Devis" en encre. Fonctionne aussi bien sur fond blanc que sur les nouveaux accents vifs.
 
-Les 3 variantes sont rendues dans l'aperçu HTML (`preview.html`) pour choix visuel.
-
-## Fichiers livrés
+## Fichiers
 
 - `design-tokens.json` — valeurs brutes, exploitables directement (CSS vars / Tailwind theme).
+- `design-tokens.css` — variables CSS + classes de base, prêtes à copier.
 - `design-tokens.md` — ce document (rationale + valeurs).
-- `preview.html` — aperçu statique : palette, typographies, bouton, carte, titre, 3 wordmarks.
 
-**À valider visuellement avant de démarrer TICKET-002 (maquettes) et l'intégration dans le frontend (TICKET-003).**
+La référence vivante est désormais l'app elle-même (`frontend/src/index.css` + `App.css`) ; ces fichiers documentent l'intention mais peuvent dériver légèrement des valeurs exactes en cas d'ajustement rapide non reporté ici.

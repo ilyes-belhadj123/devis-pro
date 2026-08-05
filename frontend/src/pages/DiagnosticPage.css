@@ -31,7 +31,7 @@
 .scan-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(42, 37, 33, 0.25);
+  background: rgba(31, 33, 41, 0.3);
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -43,7 +43,7 @@
   position: absolute;
   inset: 0;
   width: 35%;
-  background: linear-gradient(90deg, transparent, rgba(21, 184, 176, 0.85), transparent);
+  background: linear-gradient(90deg, transparent, rgba(20, 184, 166, 0.85), transparent);
   animation: scan-sweep 1.4s ease-in-out infinite;
 }
 
@@ -63,7 +63,7 @@
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  background: rgba(21, 184, 176, 0.9);
+  background: rgba(20, 184, 166, 0.9);
   padding: 6px 14px;
   border-radius: var(--radius-pill);
 }

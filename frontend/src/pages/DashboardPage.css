@@ -47,7 +47,7 @@
 
 .stat-tile-success {
   border-color: var(--color-state-success);
-  background: rgba(63, 143, 95, 0.08);
+  background: rgba(22, 163, 74, 0.08);
 }
 
 .stat-value-success {
