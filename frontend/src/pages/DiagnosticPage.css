@@ -81,6 +81,18 @@
   align-items: flex-start;
 }
 
+.diagnostic-result-title {
+  font-size: 1.375rem;
+  margin-top: var(--space-2);
+}
+
+.clarification-title {
+  font-size: 1rem;
+  font-family: var(--font-body);
+  font-weight: 600;
+  margin: 0;
+}
+
 .observations-visuelles {
   font-size: 0.8125rem;
   color: var(--color-text-secondary);

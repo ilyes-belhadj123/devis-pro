@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getStatistiques, type StatistiquesApi } from '../api'
+import Alert from '../components/Alert'
 import './DashboardPage.css'
 
 function DashboardPage() {
@@ -21,7 +22,7 @@ function DashboardPage() {
         SnapDevis, agrégé sur l'ensemble des devis générés en démo.
       </p>
 
-      {erreur && <p style={{ color: 'var(--color-state-error)', fontSize: '0.875rem' }}>{erreur}</p>}
+      {erreur && <Alert type="error">{erreur}</Alert>}
 
       {stats && stats.nombre_sessions === 0 && (
         <p className="page-lead">
@@ -54,25 +55,28 @@ function DashboardPage() {
           </p>
 
           <div className="card">
-            <h2 style={{ fontSize: '1.125rem', marginBottom: 'var(--space-4)' }}>Répartition par type de problème</h2>
-            <table className="devis-table">
-              <thead>
-                <tr>
-                  <th>Problème</th>
-                  <th>Nombre de devis</th>
-                  <th>Panier moyen</th>
-                </tr>
-              </thead>
-              <tbody>
-                {stats.repartition_par_probleme.map((ligne) => (
-                  <tr key={ligne.probleme}>
-                    <td>{ligne.probleme.replace(/_/g, ' ')}</td>
-                    <td>{ligne.nombre}</td>
-                    <td className="text-numeric">{ligne.panier_moyen.toFixed(2)} €</td>
+            <h2 className="dashboard-section-title">Répartition par type de problème</h2>
+            <div className="table-scroll">
+              <table className="devis-table">
+                <thead>
+                  <tr>
+                    <th>Problème</th>
+                    <th>Nombre de devis</th>
+                    <th>Panier moyen</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {stats.repartition_par_probleme.map((ligne) => (
+                    <tr key={ligne.probleme}>
+                      <td>{ligne.probleme.replace(/_/g, ' ')}</td>
+                      <td>{ligne.nombre}</td>
+                      <td className="text-numeric">{ligne.panier_moyen.toFixed(2)} €</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="table-scroll-hint">← Faites glisser pour voir tout le tableau →</p>
           </div>
         </>
       )}

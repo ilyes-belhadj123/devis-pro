@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { affinerDiagnostic, genererDevis, type DevisApi, type DiagnosticApi } from '../api'
+import Alert from '../components/Alert'
 import { mockDiagnostic } from '../mocks/mockData'
 import './DiagnosticPage.css'
 
@@ -89,7 +90,7 @@ function DiagnosticPage() {
             <span className="icon-badge">{ICONES_CATEGORIE[diagnostic.categorie] ?? '🛠️'}</span>
             <div>
               <span className="badge">● {Math.round(diagnostic.confiance * 100)}% de confiance</span>
-              <h2 style={{ fontSize: '1.375rem', marginTop: 'var(--space-2)' }}>{diagnostic.probleme_label}</h2>
+              <h2 className="diagnostic-result-title">{diagnostic.probleme_label}</h2>
               <p className="page-lead">Catégorie détectée : {diagnostic.categorie}</p>
             </div>
           </div>
@@ -102,20 +103,18 @@ function DiagnosticPage() {
           )}
 
           {diagnostic.degrade && (
-            <p style={{ fontSize: '0.8125rem', color: 'var(--color-state-warning)' }}>
+            <Alert type="warning">
               Diagnostic simulé — configurez votre clé OpenRouter dans{' '}
-              <a href="/parametres" style={{ color: 'inherit', textDecoration: 'underline' }}>
+              <a href="/parametres" className="alert-link">
                 Paramètres
               </a>{' '}
               pour une analyse réelle.
-            </p>
+            </Alert>
           )}
 
           {diagnostic.questions_clarification.length > 0 && (
             <div className="clarification">
-              <h3 style={{ fontSize: '1rem', fontFamily: 'var(--font-body)', fontWeight: 600 }}>
-                Pour un devis avec de vraies quantités, précisez :
-              </h3>
+              <h3 className="clarification-title">Pour un devis avec de vraies quantités, précisez :</h3>
               {diagnostic.questions_clarification.map((question) => (
                 <p key={question}>{question}</p>
               ))}
@@ -156,12 +155,10 @@ function DiagnosticPage() {
           )}
 
           {reponseChoisie && !isAffining && diagnostic.questions_clarification.length === 0 && (
-            <p style={{ fontSize: '0.8125rem', color: 'var(--color-state-success)' }}>
-              Diagnostic affiné à partir de vos précisions ✓
-            </p>
+            <Alert type="success">Diagnostic affiné à partir de vos précisions ✓</Alert>
           )}
 
-          {erreur && <p style={{ color: 'var(--color-state-error)', fontSize: '0.875rem' }}>{erreur}</p>}
+          {erreur && <Alert type="error">{erreur}</Alert>}
 
           {diagnostic.questions_clarification.length === 0 ? (
             <button type="button" className="btn btn-primary" disabled={isGenerating} onClick={genererLeDevis}>

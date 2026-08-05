@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { exporterDevisPdf, trouverAlternative, type DevisApi } from '../api'
+import Alert from '../components/Alert'
 import { mockDevis, type LigneDevis } from '../mocks/mockData'
 import './DevisPage.css'
 
@@ -102,16 +103,16 @@ function DevisPage() {
       </div>
 
       {erreurExport && (
-        <p className="no-print" style={{ fontSize: '0.8125rem', color: 'var(--color-state-error)' }}>
+        <Alert type="error" className="no-print">
           {erreurExport}
-        </p>
+        </Alert>
       )}
 
       {!estDonneesReelles && (
-        <p className="no-print" style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)' }}>
+        <Alert type="info" className="no-print">
           Devis d'exemple (accès direct à l'écran) — passez par le parcours complet pour un devis généré à partir du
           catalogue.
-        </p>
+        </Alert>
       )}
 
       <div className="card devis-sheet">
@@ -125,51 +126,54 @@ function DevisPage() {
           <span className="badge">Session #A1B2C3</span>
         </header>
 
-        <table className="devis-table">
-          <thead>
-            <tr>
-              <th>Produit</th>
-              <th>Catégorie</th>
-              <th>Qté</th>
-              <th>Prix unit.</th>
-              <th>Sous-total</th>
-              <th className="no-print"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {lignes.map((ligne) => (
-              <tr key={ligne.id}>
-                <td>{ligne.nom}</td>
-                <td>{ligne.categorie}</td>
-                <td>
-                  <input
-                    type="number"
-                    min={0}
-                    className="qty-input no-print"
-                    value={ligne.quantite}
-                    onChange={(e) => modifierQuantite(ligne.id, Number(e.target.value))}
-                  />
-                  <span className="print-only">{ligne.quantite}</span> {ligne.unite}
-                </td>
-                <td className="text-numeric">{ligne.prixUnitaire.toFixed(2)} €</td>
-                <td className="text-numeric">{(ligne.quantite * ligne.prixUnitaire).toFixed(2)} €</td>
-                <td className="no-print devis-row-actions">
-                  <button
-                    type="button"
-                    className="btn-link"
-                    disabled={ligneEnRecherche === ligne.id}
-                    onClick={() => proposerAlternative(ligne)}
-                  >
-                    {ligneEnRecherche === ligne.id ? 'Recherche…' : 'Alternative moins chère'}
-                  </button>
-                  <button type="button" className="btn-ghost" onClick={() => supprimerLigne(ligne.id)}>
-                    Supprimer
-                  </button>
-                </td>
+        <div className="table-scroll">
+          <table className="devis-table devis-table-wide">
+            <thead>
+              <tr>
+                <th>Produit</th>
+                <th>Catégorie</th>
+                <th>Qté</th>
+                <th>Prix unit.</th>
+                <th>Sous-total</th>
+                <th className="no-print"></th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {lignes.map((ligne) => (
+                <tr key={ligne.id}>
+                  <td>{ligne.nom}</td>
+                  <td>{ligne.categorie}</td>
+                  <td>
+                    <input
+                      type="number"
+                      min={0}
+                      className="qty-input no-print"
+                      value={ligne.quantite}
+                      onChange={(e) => modifierQuantite(ligne.id, Number(e.target.value))}
+                    />
+                    <span className="print-only">{ligne.quantite}</span> {ligne.unite}
+                  </td>
+                  <td className="text-numeric">{ligne.prixUnitaire.toFixed(2)} €</td>
+                  <td className="text-numeric">{(ligne.quantite * ligne.prixUnitaire).toFixed(2)} €</td>
+                  <td className="no-print devis-row-actions">
+                    <button
+                      type="button"
+                      className="btn-link"
+                      disabled={ligneEnRecherche === ligne.id}
+                      onClick={() => proposerAlternative(ligne)}
+                    >
+                      {ligneEnRecherche === ligne.id ? 'Recherche…' : 'Alternative moins chère'}
+                    </button>
+                    <button type="button" className="btn-ghost" onClick={() => supprimerLigne(ligne.id)}>
+                      Supprimer
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="table-scroll-hint">← Faites glisser pour voir tout le tableau →</p>
 
         <div className="devis-total-row">
           <span>Total estimé</span>
@@ -177,9 +181,9 @@ function DevisPage() {
         </div>
 
         {messageAlternative && (
-          <p className="no-print" style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)' }}>
+          <Alert type="info" className="no-print">
             {messageAlternative}
-          </p>
+          </Alert>
         )}
       </div>
     </section>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getHistorique, getHistoriqueDetail, type HistoriqueResumeApi } from '../api'
+import Alert from '../components/Alert'
 
 function HistoriquePage() {
   const navigate = useNavigate()
@@ -32,7 +33,7 @@ function HistoriquePage() {
       <h1>Devis générés précédemment</h1>
       <p className="page-lead">Retrouvez un devis déjà généré, pour le revoir ou le réexporter en PDF.</p>
 
-      {erreur && <p style={{ color: 'var(--color-state-error)', fontSize: '0.875rem' }}>{erreur}</p>}
+      {erreur && <Alert type="error">{erreur}</Alert>}
 
       {sessions && sessions.length === 0 && (
         <p className="page-lead">Aucun devis généré pour l'instant — passe par le parcours upload → diagnostic.</p>
@@ -40,37 +41,40 @@ function HistoriquePage() {
 
       {sessions && sessions.length > 0 && (
         <div className="card">
-          <table className="devis-table">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Problème</th>
-                <th>Nb produits</th>
-                <th>Total</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {sessions.map((session) => (
-                <tr key={session.session_id}>
-                  <td>{new Date(session.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
-                  <td>{session.probleme.replace(/_/g, ' ')}</td>
-                  <td>{session.nombre_lignes}</td>
-                  <td className="text-numeric">{session.total.toFixed(2)} €</td>
-                  <td>
-                    <button
-                      type="button"
-                      className="btn-link"
-                      disabled={sessionEnChargement === session.session_id}
-                      onClick={() => revoir(session.session_id)}
-                    >
-                      {sessionEnChargement === session.session_id ? 'Chargement…' : 'Revoir →'}
-                    </button>
-                  </td>
+          <div className="table-scroll">
+            <table className="devis-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Problème</th>
+                  <th>Nb produits</th>
+                  <th>Total</th>
+                  <th></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {sessions.map((session) => (
+                  <tr key={session.session_id}>
+                    <td>{new Date(session.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                    <td>{session.probleme.replace(/_/g, ' ')}</td>
+                    <td>{session.nombre_lignes}</td>
+                    <td className="text-numeric">{session.total.toFixed(2)} €</td>
+                    <td>
+                      <button
+                        type="button"
+                        className="btn-link"
+                        disabled={sessionEnChargement === session.session_id}
+                        onClick={() => revoir(session.session_id)}
+                      >
+                        {sessionEnChargement === session.session_id ? 'Chargement…' : 'Revoir →'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="table-scroll-hint">← Faites glisser pour voir tout le tableau →</p>
         </div>
       )}
     </section>

@@ -60,9 +60,38 @@
   margin-left: var(--space-2);
 }
 
+@media (max-width: 640px) {
+  .app-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .app-nav {
+    justify-content: space-between;
+    gap: var(--space-2);
+  }
+
+  .app-nav a {
+    font-size: 0.75rem;
+  }
+
+  .app-nav-tool {
+    margin-left: 0;
+    font-size: 1rem;
+  }
+}
+
 .app-main {
   flex: 1;
   padding: var(--space-8) var(--space-6);
+}
+
+@media (max-width: 640px) {
+  .app-main {
+    padding: var(--space-6) var(--space-4);
+  }
 }
 
 .app-footer {
@@ -192,6 +221,37 @@
 @media (max-width: 760px) {
   .hero-split {
     grid-template-columns: 1fr;
+  }
+}
+
+.table-scroll {
+  overflow-x: auto;
+  margin: 0 calc(-1 * var(--space-2));
+  padding: 0 var(--space-2);
+}
+
+.table-scroll table {
+  width: 100%;
+}
+
+.table-scroll-hint {
+  display: none;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  margin-top: var(--space-2);
+}
+
+@media (max-width: 640px) {
+  /* le devis a trop de colonnes (produit, categorie, qte, prix, sous-total, actions)
+     pour tenir sur un ecran de telephone : on force le defilement horizontal plutot
+     que de compresser illisiblement chaque colonne. Les tableaux plus simples
+     (historique, dashboard) restent en width:100% et ne defilent que si necessaire. */
+  .devis-table-wide {
+    min-width: 560px;
+  }
+
+  .table-scroll-hint {
+    display: block;
   }
 }
 

@@ -58,3 +58,8 @@
   font-size: 1.125rem;
   font-weight: 500;
 }
+
+.dashboard-section-title {
+  font-size: 1.125rem;
+  margin-bottom: var(--space-4);
+}
