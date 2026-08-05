@@ -39,6 +39,7 @@ function DiagnosticPage() {
     try {
       const diagnosticAffine = await affinerDiagnostic(diagnostic, reponse)
       setDiagnostic(diagnosticAffine)
+      setReponseLibre('')
     } catch (err) {
       setErreur(err instanceof Error ? err.message : "Impossible d'affiner le diagnostic pour le moment.")
     } finally {
@@ -50,7 +51,7 @@ function DiagnosticPage() {
     setIsGenerating(true)
     setErreur(null)
     try {
-      const devis: DevisApi = await genererDevis(diagnostic.probleme_cle)
+      const devis: DevisApi = await genererDevis(diagnostic.probleme_cle, diagnostic.session_id)
       navigate('/devis', { state: { devis } })
     } catch (err) {
       setErreur(
@@ -106,7 +107,7 @@ function DiagnosticPage() {
           {diagnostic.questions_clarification.length > 0 && (
             <div className="clarification">
               <h3 style={{ fontSize: '1rem', fontFamily: 'var(--font-body)', fontWeight: 600 }}>
-                Une dernière précision
+                Pour un devis avec de vraies quantités, précisez :
               </h3>
               {diagnostic.questions_clarification.map((question) => (
                 <p key={question}>{question}</p>
@@ -121,13 +122,13 @@ function DiagnosticPage() {
               >
                 <input
                   type="text"
-                  placeholder="Votre réponse…"
+                  placeholder="Votre réponse (ex: environ 8 m²)…"
                   value={reponseLibre}
                   onChange={(e) => setReponseLibre(e.target.value)}
                   disabled={isAffining}
                 />
                 <button type="submit" className="btn btn-secondary" disabled={isAffining || !reponseLibre.trim()}>
-                  {isAffining && reponseChoisie === reponseLibre ? '…' : 'Valider'}
+                  {isAffining ? '…' : 'Valider'}
                 </button>
               </form>
 
@@ -149,15 +150,21 @@ function DiagnosticPage() {
 
           {reponseChoisie && !isAffining && diagnostic.questions_clarification.length === 0 && (
             <p style={{ fontSize: '0.8125rem', color: 'var(--color-state-success)' }}>
-              Diagnostic affiné à partir de votre précision ✓
+              Diagnostic affiné à partir de vos précisions ✓
             </p>
           )}
 
           {erreur && <p style={{ color: 'var(--color-state-error)', fontSize: '0.875rem' }}>{erreur}</p>}
 
-          <button type="button" className="btn btn-primary" disabled={isGenerating} onClick={genererLeDevis}>
-            {isGenerating ? 'Génération du devis…' : 'Générer le devis →'}
-          </button>
+          {diagnostic.questions_clarification.length === 0 ? (
+            <button type="button" className="btn btn-primary" disabled={isGenerating} onClick={genererLeDevis}>
+              {isGenerating ? 'Génération du devis…' : 'Générer le devis →'}
+            </button>
+          ) : (
+            <button type="button" className="btn-link" disabled={isGenerating} onClick={genererLeDevis}>
+              {isGenerating ? 'Génération du devis…' : 'Ignorer et générer un devis approximatif →'}
+            </button>
+          )}
         </div>
       )}
     </section>

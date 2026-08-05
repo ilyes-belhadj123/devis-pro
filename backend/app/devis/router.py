@@ -5,6 +5,8 @@ from bson.errors import InvalidId
 from fastapi import APIRouter, HTTPException, Response
 
 from app.core.database import database
+from app.diagnostic.service import estimer_quantites
+from app.diagnostic.session_store import recuperer_session
 from app.devis.models import (
     AlternativeInput,
     AlternativeResultat,
@@ -38,6 +40,19 @@ async def generer_devis(diagnostic: DiagnosticInput) -> DevisGenere:
     # on reconstruit dans l'ordre de la regle (le $in de Mongo ne garantit pas l'ordre) :
     # le premier produit de la regle est le "produit principal", celui que le client
     # aurait achete seul sans SnapDevis - c'est la base du calcul panier moyen avant/apres.
+    produits_ordonnes = [
+        produit
+        for reference in regle["references_produits"]
+        if (produit := produits_par_reference.get(reference)) is not None
+    ]
+
+    # si une conversation de diagnostic existe (mesures, dimensions... donnees par le
+    # client), on demande a l'IA d'estimer des quantites realistes plutot que 1 par defaut.
+    quantites_estimees = await estimer_quantites(
+        recuperer_session(diagnostic.session_id) if diagnostic.session_id else None,
+        [{"reference": p["reference"], "nom": p["nom"], "unite": p["unite"]} for p in produits_ordonnes],
+    )
+
     lignes = [
         LigneDevis(
             reference=produit["reference"],
@@ -45,11 +60,10 @@ async def generer_devis(diagnostic: DiagnosticInput) -> DevisGenere:
             categorie=produit["categorie"],
             unite=produit["unite"],
             prix_unitaire=produit["prix"],
-            quantite=1,
-            sous_total=round(produit["prix"], 2),
+            quantite=(quantites_estimees or {}).get(produit["reference"], 1),
+            sous_total=round(produit["prix"] * (quantites_estimees or {}).get(produit["reference"], 1), 2),
         )
-        for reference in regle["references_produits"]
-        if (produit := produits_par_reference.get(reference)) is not None
+        for produit in produits_ordonnes
     ]
 
     groupes_par_categorie: dict[str, float] = {}

@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 
 class DiagnosticInput(BaseModel):
     probleme: str
+    session_id: str | None = None
 
 
 class LigneDevis(BaseModel):

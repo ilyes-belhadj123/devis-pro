@@ -36,11 +36,11 @@ export type DevisApi = {
   total: number
 }
 
-export async function genererDevis(probleme: string): Promise<DevisApi> {
+export async function genererDevis(probleme: string, sessionId?: string | null): Promise<DevisApi> {
   const response = await fetch(`${API_URL}/devis/generer`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ probleme }),
+    body: JSON.stringify({ probleme, session_id: sessionId ?? null }),
   })
 
   if (!response.ok) {

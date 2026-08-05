@@ -2,7 +2,7 @@ from fastapi import APIRouter, File, UploadFile
 
 from app.diagnostic.models import AffinerInput, DiagnosticResultat
 from app.diagnostic.service import DiagnosticIndisponible, affiner_diagnostic, analyser_photo
-from app.diagnostic.session_store import creer_session, recuperer_session
+from app.diagnostic.session_store import creer_session, mettre_a_jour_messages, recuperer_session
 
 router = APIRouter(prefix="/diagnostic", tags=["diagnostic"])
 
@@ -14,7 +14,8 @@ async def analyser(photo: UploadFile = File(...)) -> DiagnosticResultat:
     session_id = creer_session(contenu, content_type)
 
     try:
-        resultat = await analyser_photo(contenu, content_type)
+        resultat, messages = await analyser_photo(contenu, content_type)
+        mettre_a_jour_messages(session_id, messages)
         return DiagnosticResultat(**resultat, session_id=session_id)
     except DiagnosticIndisponible:
         return DiagnosticResultat(
@@ -31,5 +32,7 @@ async def analyser(photo: UploadFile = File(...)) -> DiagnosticResultat:
 @router.post("/affiner", response_model=DiagnosticResultat)
 async def affiner(payload: AffinerInput) -> DiagnosticResultat:
     session = recuperer_session(payload.session_id) if payload.session_id else None
-    resultat = await affiner_diagnostic(payload.probleme_cle, payload.reponse, session)
+    resultat, messages = await affiner_diagnostic(payload.probleme_cle, payload.reponse, session)
+    if messages is not None and payload.session_id:
+        mettre_a_jour_messages(payload.session_id, messages)
     return DiagnosticResultat(**resultat, session_id=payload.session_id)
