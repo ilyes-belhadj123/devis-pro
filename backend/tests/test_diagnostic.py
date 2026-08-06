@@ -28,6 +28,35 @@ def test_analyser_accepte_plusieurs_photos(client):
     assert resultat["session_id"] is not None
 
 
+def test_analyser_accepte_note_et_point_de_reperage(client):
+    client.delete("/parametres/openrouter")
+
+    response = client.post(
+        "/diagnostic/analyser",
+        files={"photos": ("test.jpg", b"contenu-image-factice", "image/jpeg")},
+        data={
+            "note": "La fuite n'apparaît qu'à l'usage",
+            "points": '[{"index": 0, "x": 0.62, "y": 0.4}]',
+        },
+    )
+    assert response.status_code == 200
+    resultat = response.json()
+    assert resultat["degrade"] is True
+    assert resultat["session_id"] is not None
+
+
+def test_analyser_ignore_points_mal_formes(client):
+    client.delete("/parametres/openrouter")
+
+    response = client.post(
+        "/diagnostic/analyser",
+        files={"photos": ("test.jpg", b"contenu-image-factice", "image/jpeg")},
+        data={"points": "pas-du-json-valide"},
+    )
+    assert response.status_code == 200
+    assert response.json()["degrade"] is True
+
+
 def test_affiner_sans_session_bascule_interieur_exterieur(client):
     response = client.post(
         "/diagnostic/affiner",

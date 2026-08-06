@@ -81,6 +81,20 @@
   height: 100%;
   object-fit: cover;
   display: block;
+  cursor: crosshair;
+}
+
+.photo-thumb-point {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  background: var(--color-accent-copper);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35);
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  padding: 0;
 }
 
 .photo-thumb-remove {
@@ -127,6 +141,12 @@
   display: flex;
   gap: var(--space-3);
   flex-wrap: wrap;
+}
+
+.point-hint {
+  font-size: 0.75rem;
+  color: var(--color-text-faint);
+  margin: calc(-1 * var(--space-2)) 0 0;
 }
 
 .note-field {

@@ -1,4 +1,4 @@
-import { useRef, useState, type DragEvent } from 'react'
+import { useRef, useState, type DragEvent, type MouseEvent as ReactMouseEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { analyserPhoto } from '../api'
 import { mockDiagnostic } from '../mocks/mockData'
@@ -7,7 +7,8 @@ import './UploadPage.css'
 
 const MAX_PHOTOS = 6
 
-type Photo = { file: File; url: string }
+type Point = { x: number; y: number }
+type Photo = { file: File; url: string; point?: Point }
 
 function UploadPage() {
   const navigate = useNavigate()
@@ -43,6 +44,19 @@ function UploadPage() {
     setPhotos((actuelles) => actuelles.filter((_, i) => i !== index))
   }
 
+  const marquerPoint = (index: number, event: ReactMouseEvent<HTMLImageElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect()
+    const point = {
+      x: (event.clientX - rect.left) / rect.width,
+      y: (event.clientY - rect.top) / rect.height,
+    }
+    setPhotos((actuelles) => actuelles.map((photo, i) => (i === index ? { ...photo, point } : photo)))
+  }
+
+  const retirerPoint = (index: number) => {
+    setPhotos((actuelles) => actuelles.map((photo, i) => (i === index ? { ...photo, point: undefined } : photo)))
+  }
+
   const handleDrop = (event: DragEvent<HTMLDivElement>) => {
     event.preventDefault()
     setIsDragging(false)
@@ -57,8 +71,11 @@ function UploadPage() {
     if (photos.length === 0) return
     setIsAnalyzing(true)
     const photoUrls = photos.map((photo) => photo.url)
+    const points = photos
+      .map((photo, index) => (photo.point ? { index, x: photo.point.x, y: photo.point.y } : null))
+      .filter((point): point is { index: number; x: number; y: number } => point !== null)
     try {
-      const diagnostic = await analyserPhoto(photos.map((photo) => photo.file), note)
+      const diagnostic = await analyserPhoto(photos.map((photo) => photo.file), note, points)
       navigate('/diagnostic', { state: { photoUrls, diagnostic } })
     } catch (err) {
       console.error('Analyse photo indisponible, bascule en mode dégradé :', err)
@@ -110,7 +127,27 @@ function UploadPage() {
           <div className="photo-grid">
             {photos.map((photo, index) => (
               <div className="photo-thumb" key={photo.url}>
-                <img src={photo.url} alt={`Photo du projet ${index + 1}`} />
+                <img
+                  src={photo.url}
+                  alt={`Photo du projet ${index + 1}`}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    marquerPoint(index, e)
+                  }}
+                />
+                {photo.point && (
+                  <button
+                    type="button"
+                    className="photo-thumb-point"
+                    style={{ left: `${photo.point.x * 100}%`, top: `${photo.point.y * 100}%` }}
+                    aria-label="Retirer le repère"
+                    title="Retirer le repère"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      retirerPoint(index)
+                    }}
+                  />
+                )}
                 <button
                   type="button"
                   className="photo-thumb-remove"
@@ -165,6 +202,10 @@ function UploadPage() {
           }}
         />
       </div>
+
+      {photos.length > 0 && (
+        <p className="point-hint">Touchez une photo pour indiquer l'emplacement exact du problème (facultatif)</p>
+      )}
 
       {photos.length > 0 && (
         <div className="note-field">

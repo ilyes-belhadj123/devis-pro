@@ -1,3 +1,5 @@
+import json
+
 from fastapi import APIRouter, File, Form, UploadFile
 
 from app.diagnostic.models import AffinerInput, DiagnosticResultat
@@ -8,12 +10,23 @@ router = APIRouter(prefix="/diagnostic", tags=["diagnostic"])
 
 
 @router.post("/analyser", response_model=DiagnosticResultat)
-async def analyser(photos: list[UploadFile] = File(...), note: str | None = Form(None)) -> DiagnosticResultat:
+async def analyser(
+    photos: list[UploadFile] = File(...),
+    note: str | None = Form(None),
+    points: str | None = Form(None),
+) -> DiagnosticResultat:
     photos_contenu = [(await photo.read(), photo.content_type or "image/jpeg") for photo in photos]
     session_id = creer_session(photos_contenu)
 
+    points_reperage: list[dict] | None = None
+    if points:
+        try:
+            points_reperage = json.loads(points)
+        except (json.JSONDecodeError, TypeError):
+            points_reperage = None
+
     try:
-        resultat, messages = await analyser_photo(photos_contenu, note)
+        resultat, messages = await analyser_photo(photos_contenu, note, points_reperage)
         mettre_a_jour_messages(session_id, messages)
         return DiagnosticResultat(**resultat, session_id=session_id)
     except DiagnosticIndisponible:

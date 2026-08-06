@@ -61,11 +61,20 @@ export type DiagnosticApi = {
   session_id?: string | null
 }
 
-export async function analyserPhoto(fichiers: File[], note?: string): Promise<DiagnosticApi> {
+export type PointReperageApi = { index: number; x: number; y: number }
+
+export async function analyserPhoto(
+  fichiers: File[],
+  note?: string,
+  points?: PointReperageApi[],
+): Promise<DiagnosticApi> {
   const formData = new FormData()
   fichiers.forEach((fichier) => formData.append('photos', fichier))
   if (note && note.trim()) {
     formData.append('note', note.trim())
+  }
+  if (points && points.length > 0) {
+    formData.append('points', JSON.stringify(points))
   }
 
   const response = await fetch(`${API_URL}/diagnostic/analyser`, {

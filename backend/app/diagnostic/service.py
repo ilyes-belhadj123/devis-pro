@@ -130,7 +130,11 @@ def _basculer_interieur_exterieur(probleme_cle: str, reponse: str) -> str:
     return bascule if bascule in PROBLEMES_CONNUS else probleme_cle
 
 
-def _construire_messages_initiaux(photos: list[tuple[bytes, str]], note: str | None = None) -> list[dict]:
+def _construire_messages_initiaux(
+    photos: list[tuple[bytes, str]],
+    note: str | None = None,
+    points: list[dict] | None = None,
+) -> list[dict]:
     consigne = (
         "Analyse la photo suivante et identifie le probleme a resoudre."
         if len(photos) == 1
@@ -143,6 +147,20 @@ def _construire_messages_initiaux(photos: list[tuple[bytes, str]], note: str | N
             "supplementaire (ce n'est pas necessairement visible sur la photo) mais base ta classification "
             "et tes observations en priorite sur ce que tu vois reellement."
         )
+    for point in points or []:
+        try:
+            index = int(point["index"])
+            x = float(point["x"])
+            y = float(point["y"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if 0 <= index < len(photos):
+            consigne += (
+                f" Sur la photo {index + 1}, le client a indique precisement la zone du probleme aux "
+                f"coordonnees relatives environ {round(x * 100)}% depuis la gauche et {round(y * 100)}% depuis "
+                "le haut de cette photo : concentre ton observation sur cette zone en priorite si plusieurs "
+                "elements sont visibles sur cette photo."
+            )
     contenu: list[dict] = [{"type": "text", "text": consigne}]
     for image_bytes, content_type in photos:
         image_b64 = base64.b64encode(image_bytes).decode("ascii")
@@ -205,8 +223,12 @@ async def _finaliser_resultat(resultat: dict) -> dict:
     }
 
 
-async def analyser_photo(photos: list[tuple[bytes, str]], note: str | None = None) -> tuple[dict, list[dict]]:
-    messages = _construire_messages_initiaux(photos, note)
+async def analyser_photo(
+    photos: list[tuple[bytes, str]],
+    note: str | None = None,
+    points: list[dict] | None = None,
+) -> tuple[dict, list[dict]]:
+    messages = _construire_messages_initiaux(photos, note, points)
 
     try:
         texte_reponse = await _appeler_modele(messages)
