@@ -1,195 +1,190 @@
-.devis-actions {
+.quote-wrap {
+  display: flex;
+  justify-content: center;
+}
+
+.quote {
+  width: 100%;
+  max-width: 480px;
+  background: var(--color-bg-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border-default);
+  position: relative;
+  box-shadow: var(--shadow-lg);
+}
+
+.quote::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: var(--gradient-brand);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.quote-inner {
+  padding: var(--space-6) var(--space-5) var(--space-5);
+}
+
+.quote-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-bottom: var(--space-5);
 }
 
-.devis-sheet {
+.qh-brand {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-5);
+  align-items: center;
+  gap: var(--space-2);
 }
 
-.devis-sheet-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  padding-bottom: var(--space-4);
-  border-bottom: 2px solid var(--color-text-primary);
+.qh-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  background: var(--gradient-brand);
 }
 
-.logo-print {
+.qh-txt {
   font-family: var(--font-heading);
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--color-accent-copper);
+  font-weight: 700;
+  font-size: 0.9375rem;
 }
 
-.devis-liste {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+.qh-meta {
+  font-size: 0.65625rem;
+  color: var(--color-text-faint);
+  text-align: right;
+  line-height: 1.4;
+}
+
+.li {
   display: flex;
-  flex-direction: column;
-}
-
-.devis-item {
-  display: grid;
-  grid-template-columns: auto 1fr auto auto;
   align-items: center;
-  gap: var(--space-4);
-  padding: var(--space-4) 0;
+  gap: var(--space-3);
+  padding: 13px 0;
   border-bottom: 1px solid var(--color-border-default);
 }
 
-.devis-item-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-md);
-  display: inline-flex;
+.li-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  flex-shrink: 0;
+  display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.375rem;
-  background: var(--color-accent-copper-soft);
-  flex-shrink: 0;
 }
 
-.devis-item-corps {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+.li-mid {
+  flex: 1;
   min-width: 0;
 }
 
-.devis-item-nom {
-  font-weight: 600;
-  font-size: 0.9375rem;
+.li-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin: 0;
 }
 
-.devis-item-categorie {
-  font-size: 0.75rem;
-  color: var(--color-text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+.li-cat {
+  font-size: 0.6875rem;
+  color: var(--color-text-faint);
+  margin: 2px 0 0;
+  text-transform: capitalize;
 }
 
-.devis-item-actions {
+.li-actions {
   display: flex;
   gap: var(--space-3);
-  margin-top: var(--space-1);
+  margin-top: 4px;
 }
 
-.devis-item-qty {
-  display: inline-flex;
-  align-items: center;
-  border: 1px solid var(--color-border-default);
-  border-radius: var(--radius-pill);
-  overflow: hidden;
-}
-
-.qty-btn {
-  width: 28px;
-  height: 28px;
-  border: none;
-  background: var(--color-bg-surface-sunken);
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  color: var(--color-text-primary);
-  line-height: 1;
-}
-
-.qty-btn:hover {
-  background: var(--color-accent-tech-soft);
-}
-
-.qty-btn:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
-
-.qty-value {
-  min-width: 32px;
-  text-align: center;
-  font-family: var(--font-body);
-  font-weight: 600;
-  font-feature-settings: 'tnum';
-  font-size: 0.9375rem;
-}
-
-.devis-item-prix {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
-  min-width: 92px;
-}
-
-.devis-item-prix-unitaire {
-  font-size: 0.75rem;
-  color: var(--color-text-secondary);
-  white-space: nowrap;
-}
-
-.devis-item-sous-total {
-  font-weight: 600;
-  font-size: 1rem;
-}
-
-.btn-link {
+.li-action {
   background: none;
   border: none;
-  color: var(--color-accent-tech-hover);
-  font-size: 0.8125rem;
+  color: var(--color-accent-tech);
+  font-size: 0.6875rem;
   font-weight: 600;
   cursor: pointer;
   padding: 0;
+  font-family: var(--font-body);
 }
 
-.devis-total-row {
+.li-action-danger {
+  color: var(--color-state-error);
+}
+
+.li-right {
+  text-align: right;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.li-qty {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-pill);
+  padding: 2px;
+}
+
+.li-qty button {
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: var(--color-bg-surface-sunken);
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.li-qty span {
+  min-width: 16px;
+  text-align: center;
+  font-size: 0.75rem;
+}
+
+.li-price {
+  font-size: 0.84375rem;
+  font-weight: 500;
+}
+
+.quote-total {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
-  padding-top: var(--space-3);
-  border-top: 2px solid var(--color-text-primary);
+  align-items: center;
+  padding-top: var(--space-5);
+  margin-top: var(--space-1);
+}
+
+.tt-label {
+  font-size: 0.78125rem;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.tt-val {
   font-family: var(--font-heading);
-  font-size: 1.125rem;
-}
-
-.devis-total-amount {
+  font-weight: 800;
   font-size: 1.75rem;
-  font-weight: 600;
-  color: var(--color-accent-copper);
 }
 
-@media (max-width: 640px) {
-  .devis-item {
-    grid-template-columns: auto 1fr;
-    grid-template-areas:
-      'icon corps'
-      'qty prix';
-    row-gap: var(--space-3);
-  }
+.quote-actions {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
 
-  .devis-item-icon {
-    grid-area: icon;
-  }
-
-  .devis-item-corps {
-    grid-area: corps;
-  }
-
-  .devis-item-actions {
-    flex-direction: column;
-    gap: var(--space-1);
-  }
-
-  .devis-item-qty {
-    grid-area: qty;
-    justify-self: start;
-  }
-
-  .devis-item-prix {
-    grid-area: prix;
-  }
+.quote-actions .btn {
+  flex: 1;
 }

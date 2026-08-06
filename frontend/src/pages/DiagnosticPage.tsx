@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { affinerDiagnostic, genererDevis, type DevisApi, type DiagnosticApi } from '../api'
 import Alert from '../components/Alert'
 import { mockDiagnostic } from '../mocks/mockData'
-import { iconePourCategorie } from '../utils/iconesCategorie'
 import './DiagnosticPage.css'
 
 function DiagnosticPage() {
@@ -58,108 +57,127 @@ function DiagnosticPage() {
     }
   }
 
-  return (
-    <section className="page">
-      <span className="page-eyebrow">Étape 2 sur 3</span>
-      <h1>Diagnostic</h1>
+  const pourcentageConfiance = Math.round(diagnostic.confiance * 100)
 
-      <div className="scan-frame">
-        {photoUrl ? (
-          <img src={photoUrl} alt="Photo analysée" className="scan-photo" />
-        ) : (
-          <div className="scan-photo scan-photo-placeholder" />
-        )}
-        {isScanning && (
-          <div className="scan-overlay">
+  return (
+    <section className="page page-wide">
+      <span className="page-eyebrow">
+        <span className="page-eyebrow-ping" />
+        Étape 2 sur 3
+      </span>
+
+      <div className="diag-grid">
+        <div className="photo-frame">
+          {photoUrl ? (
+            <img src={photoUrl} alt="Photo analysée" className="scan-photo" />
+          ) : (
+            <div className="scan-photo scan-photo-placeholder">
+              <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="1.5">
+                <path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 011 1v9a1 1 0 01-1 1H4a1 1 0 01-1-1V9a1 1 0 011-1z" />
+                <circle cx="12" cy="13" r="3.4" />
+              </svg>
+            </div>
+          )}
+
+          {isScanning ? (
             <div className="scan-line" />
-            <span className="scan-caption">Analyse en cours…</span>
+          ) : (
+            <div className="ring-badge">
+              <div
+                className="ring"
+                style={{
+                  background: `conic-gradient(var(--color-accent-amber) 0% ${pourcentageConfiance}%, rgba(255,255,255,0.18) ${pourcentageConfiance}% 100%)`,
+                }}
+              >
+                <span>{pourcentageConfiance}%</span>
+              </div>
+              <div className="ring-badge-text">
+                Confiance
+                <b>{diagnostic.confiance >= 0.75 ? 'Diagnostic fiable' : 'À préciser'}</b>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {!isScanning && (
+          <div className="diag-panel">
+            <span className="diag-tag">✓ Catégorie détectée : {diagnostic.categorie}</span>
+            <h2 className="diag-h">{diagnostic.probleme_label}</h2>
+
+            {diagnostic.observations_visuelles && <p className="diag-p">{diagnostic.observations_visuelles}</p>}
+
+            {diagnostic.degrade && (
+              <Alert type="warning">
+                Diagnostic simulé — configurez votre clé OpenRouter dans{' '}
+                <a href="/parametres" className="alert-link">
+                  Paramètres
+                </a>{' '}
+                pour une analyse réelle.
+              </Alert>
+            )}
+
+            {diagnostic.questions_clarification.length > 0 && (
+              <div className="clarify">
+                {diagnostic.questions_clarification.map((question) => (
+                  <p key={question} className="clarify-q">
+                    {question}
+                  </p>
+                ))}
+
+                <form
+                  className="clarify-form"
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    repondreClarification(reponseLibre)
+                  }}
+                >
+                  <input
+                    type="text"
+                    placeholder="Votre réponse (ex: environ 8 m²)…"
+                    value={reponseLibre}
+                    onChange={(e) => setReponseLibre(e.target.value)}
+                    disabled={isAffining}
+                  />
+                  <button type="submit" className="btn btn-primary" disabled={isAffining || !reponseLibre.trim()}>
+                    {isAffining ? '…' : 'Valider'}
+                  </button>
+                </form>
+
+                <div className="chip-row">
+                  {['Intérieur', 'Extérieur'].map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      className={`chip ${reponseChoisie === option ? 'active' : ''}`}
+                      disabled={isAffining}
+                      onClick={() => repondreClarification(option)}
+                    >
+                      <span className="chip-dot" />
+                      {isAffining && reponseChoisie === option ? '…' : option}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {reponseChoisie && !isAffining && diagnostic.questions_clarification.length === 0 && (
+              <Alert type="success">Diagnostic affiné à partir de vos précisions ✓</Alert>
+            )}
+
+            {erreur && <Alert type="error">{erreur}</Alert>}
           </div>
         )}
       </div>
 
       {!isScanning && (
-        <div className="card diagnostic-result">
-          <div className="diagnostic-result-head">
-            <span className="icon-badge">{iconePourCategorie(diagnostic.categorie)}</span>
-            <div>
-              <span className="badge">● {Math.round(diagnostic.confiance * 100)}% de confiance</span>
-              <h2 className="diagnostic-result-title">{diagnostic.probleme_label}</h2>
-              <p className="page-lead">Catégorie détectée : {diagnostic.categorie}</p>
-            </div>
-          </div>
-
-          {diagnostic.observations_visuelles && (
-            <p className="observations-visuelles">
-              <span className="observations-visuelles-label">Ce que l'IA a observé sur la photo :</span>{' '}
-              {diagnostic.observations_visuelles}
-            </p>
-          )}
-
-          {diagnostic.degrade && (
-            <Alert type="warning">
-              Diagnostic simulé — configurez votre clé OpenRouter dans{' '}
-              <a href="/parametres" className="alert-link">
-                Paramètres
-              </a>{' '}
-              pour une analyse réelle.
-            </Alert>
-          )}
-
-          {diagnostic.questions_clarification.length > 0 && (
-            <div className="clarification">
-              <h3 className="clarification-title">Pour un devis avec de vraies quantités, précisez :</h3>
-              {diagnostic.questions_clarification.map((question) => (
-                <p key={question}>{question}</p>
-              ))}
-
-              <form
-                className="clarification-form"
-                onSubmit={(e) => {
-                  e.preventDefault()
-                  repondreClarification(reponseLibre)
-                }}
-              >
-                <input
-                  type="text"
-                  placeholder="Votre réponse (ex: environ 8 m²)…"
-                  value={reponseLibre}
-                  onChange={(e) => setReponseLibre(e.target.value)}
-                  disabled={isAffining}
-                />
-                <button type="submit" className="btn btn-secondary" disabled={isAffining || !reponseLibre.trim()}>
-                  {isAffining ? '…' : 'Valider'}
-                </button>
-              </form>
-
-              <div className="clarification-options">
-                {['Intérieur', 'Extérieur'].map((option) => (
-                  <button
-                    key={option}
-                    type="button"
-                    className="btn-link"
-                    disabled={isAffining}
-                    onClick={() => repondreClarification(option)}
-                  >
-                    {isAffining && reponseChoisie === option ? '…' : option}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {reponseChoisie && !isAffining && diagnostic.questions_clarification.length === 0 && (
-            <Alert type="success">Diagnostic affiné à partir de vos précisions ✓</Alert>
-          )}
-
-          {erreur && <Alert type="error">{erreur}</Alert>}
-
+        <div className="diag-actions">
           {diagnostic.questions_clarification.length === 0 ? (
             <button type="button" className="btn btn-primary" disabled={isGenerating} onClick={genererLeDevis}>
-              {isGenerating ? 'Génération du devis…' : 'Générer le devis →'}
+              {isGenerating ? 'Génération du devis…' : 'Générer le devis'}
             </button>
           ) : (
-            <button type="button" className="btn-link" disabled={isGenerating} onClick={genererLeDevis}>
-              {isGenerating ? 'Génération du devis…' : 'Ignorer et générer un devis approximatif →'}
+            <button type="button" className="btn btn-secondary" disabled={isGenerating} onClick={genererLeDevis}>
+              {isGenerating ? 'Génération du devis…' : 'Ignorer et générer un devis approximatif'}
             </button>
           )}
         </div>

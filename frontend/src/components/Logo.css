@@ -1,23 +1,21 @@
 .logo {
-  font-size: 1.25rem;
-  font-weight: 600;
   display: inline-flex;
-  align-items: baseline;
+  align-items: center;
+  gap: 10px;
 }
 
-.logo-snap {
-  font-family: var(--font-body);
-  color: var(--color-accent-copper);
-  font-weight: 700;
+.logo-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  background: var(--gradient-brand);
+  flex-shrink: 0;
 }
 
-.logo-dot {
-  color: var(--color-accent-tech);
-  margin: 0 1px;
-}
-
-.logo-devis {
+.logo-text {
   font-family: var(--font-heading);
-  font-weight: 400;
+  font-weight: 700;
+  font-size: 1.125rem;
+  letter-spacing: -0.02em;
   color: var(--color-text-primary);
 }

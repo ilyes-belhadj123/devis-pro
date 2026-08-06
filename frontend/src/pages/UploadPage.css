@@ -1,45 +1,68 @@
-.hero-text-col {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-
 .dropzone {
   position: relative;
-  border: 2px dashed var(--color-border-strong);
+  border: 1.5px dashed var(--color-border-strong);
   border-radius: var(--radius-lg);
   background: var(--color-bg-surface-sunken);
   cursor: pointer;
   overflow: hidden;
   transition: border-color 0.15s ease, background-color 0.15s ease;
-  min-height: 220px;
   display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  padding: var(--space-6);
 }
 
 .dropzone:hover,
 .dropzone-active {
-  border-color: var(--color-accent-tech);
-  background: var(--color-accent-tech-soft);
+  border-color: var(--color-accent-copper);
+  background: var(--color-accent-copper-soft);
 }
 
 .dropzone-filled {
   border-style: solid;
   border-color: var(--color-border-default);
   background: var(--color-bg-surface);
+  padding: 0;
 }
 
-.dropzone-empty {
-  margin: auto;
-  display: flex;
-  flex-direction: column;
+.dropzone-icon {
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  background: var(--gradient-brand);
+  display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
-  text-align: center;
-  padding: var(--space-6);
+  justify-content: center;
+  box-shadow: var(--shadow-md);
+}
+
+.dropzone-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.dropzone-title {
+  font-weight: 600;
+  font-size: 0.9688rem;
+  margin: 0 0 4px;
+}
+
+.dropzone-subtitle {
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+  margin: 0;
 }
 
 .dropzone-preview {
   width: 100%;
   max-height: 320px;
   object-fit: cover;
+  border-radius: var(--radius-lg);
+}
+
+.btn-row {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
 }

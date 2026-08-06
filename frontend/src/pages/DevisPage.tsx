@@ -2,8 +2,8 @@ import { useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { exporterDevisPdf, trouverAlternative, type DevisApi } from '../api'
 import Alert from '../components/Alert'
+import LigneIcone from '../components/LigneIcone'
 import { mockDevis, type LigneDevis } from '../mocks/mockData'
-import { iconePourCategorie } from '../utils/iconesCategorie'
 import './DevisPage.css'
 
 const dateDuJour = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
@@ -96,12 +96,10 @@ function DevisPage() {
 
   return (
     <section className="page">
-      <div className="devis-actions">
-        <span className="page-eyebrow">Étape 3 sur 3</span>
-        <button type="button" className="btn btn-primary" disabled={isExporting} onClick={exporterPdf}>
-          {isExporting ? 'Génération du PDF…' : 'Exporter en PDF'}
-        </button>
-      </div>
+      <span className="page-eyebrow">
+        <span className="page-eyebrow-ping" />
+        Étape 3 sur 3
+      </span>
 
       {erreurExport && <Alert type="error">{erreurExport}</Alert>}
 
@@ -112,79 +110,76 @@ function DevisPage() {
         </Alert>
       )}
 
-      <div className="card devis-sheet">
-        <header className="devis-sheet-header">
-          <div>
-            <span className="logo-print">Snap·Devis</span>
-            <p className="page-lead" style={{ fontSize: '0.8125rem', marginTop: 4 }}>
-              Devis généré le {dateDuJour}
-            </p>
-          </div>
-          <span className="badge">Session #A1B2C3</span>
-        </header>
+      <div className="quote-wrap">
+        <div className="quote">
+          <div className="quote-inner">
+            <div className="quote-head">
+              <div className="qh-brand">
+                <span className="qh-dot" />
+                <span className="qh-txt">Devis SnapDevis</span>
+              </div>
+              <div className="qh-meta text-mono">
+                Généré le {dateDuJour}
+                <br />
+                Session #A1B2C3
+              </div>
+            </div>
 
-        <ul className="devis-liste">
-          {lignes.map((ligne) => (
-            <li className="devis-item" key={ligne.id}>
-              <span className="devis-item-icon">{iconePourCategorie(ligne.categorie)}</span>
-
-              <div className="devis-item-corps">
-                <span className="devis-item-nom">{ligne.nom}</span>
-                <span className="devis-item-categorie">{ligne.categorie}</span>
-                <div className="devis-item-actions">
-                  <button
-                    type="button"
-                    className="btn-link"
-                    disabled={ligneEnRecherche === ligne.id}
-                    onClick={() => proposerAlternative(ligne)}
-                  >
-                    {ligneEnRecherche === ligne.id ? 'Recherche…' : 'Alternative moins chère'}
-                  </button>
-                  <button type="button" className="btn-ghost" onClick={() => supprimerLigne(ligne.id)}>
-                    Supprimer
-                  </button>
+            {lignes.map((ligne, index) => {
+              const surTeal = index % 2 === 0
+              const couleur = surTeal ? 'var(--color-accent-tech)' : 'var(--color-accent-copper)'
+              return (
+                <div className="li" key={ligne.id}>
+                  <div className="li-icon" style={{ background: surTeal ? 'var(--color-accent-tech-soft)' : 'var(--color-accent-copper-soft)' }}>
+                    <LigneIcone categorie={ligne.categorie} couleur={couleur} />
+                  </div>
+                  <div className="li-mid">
+                    <p className="li-name">{ligne.nom}</p>
+                    <p className="li-cat">{ligne.categorie}</p>
+                    <div className="li-actions">
+                      <button
+                        type="button"
+                        className="li-action"
+                        disabled={ligneEnRecherche === ligne.id}
+                        onClick={() => proposerAlternative(ligne)}
+                      >
+                        {ligneEnRecherche === ligne.id ? 'Recherche…' : 'Alternative moins chère'}
+                      </button>
+                      <button type="button" className="li-action li-action-danger" onClick={() => supprimerLigne(ligne.id)}>
+                        Supprimer
+                      </button>
+                    </div>
+                  </div>
+                  <div className="li-right">
+                    <div className="li-qty">
+                      <button type="button" aria-label="Diminuer la quantité" onClick={() => modifierQuantite(ligne.id, ligne.quantite - 1)}>
+                        −
+                      </button>
+                      <span className="text-mono">{ligne.quantite}</span>
+                      <button type="button" aria-label="Augmenter la quantité" onClick={() => modifierQuantite(ligne.id, ligne.quantite + 1)}>
+                        +
+                      </button>
+                    </div>
+                    <div className="li-price text-mono">{(ligne.quantite * ligne.prixUnitaire).toFixed(2)} €</div>
+                  </div>
                 </div>
-              </div>
+              )
+            })}
 
-              <div className="devis-item-qty">
-                <button
-                  type="button"
-                  className="qty-btn"
-                  aria-label="Diminuer la quantité"
-                  disabled={ligne.quantite <= 0}
-                  onClick={() => modifierQuantite(ligne.id, ligne.quantite - 1)}
-                >
-                  −
-                </button>
-                <span className="qty-value">{ligne.quantite}</span>
-                <button
-                  type="button"
-                  className="qty-btn"
-                  aria-label="Augmenter la quantité"
-                  onClick={() => modifierQuantite(ligne.id, ligne.quantite + 1)}
-                >
-                  +
-                </button>
-              </div>
+            <div className="quote-total">
+              <span className="tt-label">Total estimé</span>
+              <span className="tt-val text-gradient">{total.toFixed(2)} €</span>
+            </div>
 
-              <div className="devis-item-prix">
-                <span className="devis-item-prix-unitaire">
-                  {ligne.prixUnitaire.toFixed(2)} € / {ligne.unite}
-                </span>
-                <span className="devis-item-sous-total text-numeric">
-                  {(ligne.quantite * ligne.prixUnitaire).toFixed(2)} €
-                </span>
-              </div>
-            </li>
-          ))}
-        </ul>
+            {messageAlternative && <Alert type="info">{messageAlternative}</Alert>}
 
-        <div className="devis-total-row">
-          <span>Total estimé</span>
-          <span className="text-numeric devis-total-amount">{total.toFixed(2)} €</span>
+            <div className="quote-actions">
+              <button type="button" className="btn btn-primary" disabled={isExporting} onClick={exporterPdf}>
+                {isExporting ? 'Génération du PDF…' : 'Exporter en PDF'}
+              </button>
+            </div>
+          </div>
         </div>
-
-        {messageAlternative && <Alert type="info">{messageAlternative}</Alert>}
       </div>
     </section>
   )
