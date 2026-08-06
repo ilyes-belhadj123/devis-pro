@@ -4,6 +4,7 @@ import { analyserPhoto } from '../api'
 import { mockDiagnostic } from '../mocks/mockData'
 import { compresserImage } from '../utils/compresserImage'
 import { evaluerQualitePhoto, type QualitePhoto } from '../utils/evaluerQualitePhoto'
+import { useDicteeVocale } from '../utils/useDicteeVocale'
 import './UploadPage.css'
 
 const MAX_PHOTOS = 6
@@ -70,6 +71,10 @@ function UploadPage() {
   }
 
   const photosAvecSouci = photos.filter((photo) => photo.qualite?.floue || photo.qualite?.sombre)
+
+  const { ecoute, disponible: dicteeDisponible, basculer: basculerDictee } = useDicteeVocale((texte) => {
+    setNote((actuelle) => (actuelle.trim() ? `${actuelle.trim()} ${texte}` : texte))
+  })
 
   const analyser = async () => {
     if (photos.length === 0) return
@@ -234,7 +239,20 @@ function UploadPage() {
 
       {photos.length > 0 && (
         <div className="note-field">
-          <label htmlFor="note-diagnostic">Une précision à ajouter ? (facultatif)</label>
+          <div className="note-field-header">
+            <label htmlFor="note-diagnostic">Une précision à ajouter ? (facultatif)</label>
+            {dicteeDisponible && (
+              <button
+                type="button"
+                className={`mic-button ${ecoute ? 'active' : ''}`}
+                onClick={basculerDictee}
+                aria-label={ecoute ? 'Arrêter la dictée' : 'Dicter la précision'}
+                title={ecoute ? 'Arrêter la dictée' : 'Dicter la précision'}
+              >
+                🎤
+              </button>
+            )}
+          </div>
           <textarea
             id="note-diagnostic"
             placeholder="Ex : la fuite apparaît seulement quand on ouvre l'eau chaude, ça fait 2 semaines que ça coule…"
