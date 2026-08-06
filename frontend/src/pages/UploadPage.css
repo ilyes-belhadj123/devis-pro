@@ -188,6 +188,43 @@
   margin: calc(-1 * var(--space-2)) 0 0;
 }
 
+.point-labels {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: calc(-1 * var(--space-1));
+}
+
+.point-label-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.point-label-tag {
+  flex-shrink: 0;
+  font-size: 0.71875rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.point-label-row input {
+  flex: 1;
+  padding: 8px var(--space-3);
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  color: var(--color-text-primary);
+  background: var(--color-bg-surface);
+}
+
+.point-label-row input:focus {
+  outline: none;
+  border-color: var(--color-accent-copper);
+}
+
 .note-field {
   display: flex;
   flex-direction: column;

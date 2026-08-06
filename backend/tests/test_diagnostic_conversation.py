@@ -3,6 +3,25 @@ import asyncio
 from app.diagnostic import service
 
 
+def test_construire_messages_initiaux_inclut_la_legende_du_point():
+    messages = service._construire_messages_initiaux(
+        [(b"contenu", "image/jpeg")],
+        points=[{"index": 0, "x": 0.2, "y": 0.3, "label": "fissure principale, active"}],
+    )
+    texte = messages[1]["content"][0]["text"]
+    assert "fissure principale, active" in texte
+    assert "20%" in texte and "30%" in texte
+
+
+def test_construire_messages_initiaux_point_sans_legende_ne_plante_pas():
+    messages = service._construire_messages_initiaux(
+        [(b"contenu", "image/jpeg")],
+        points=[{"index": 0, "x": 0.2, "y": 0.3, "label": ""}],
+    )
+    texte = messages[1]["content"][0]["text"]
+    assert "()" not in texte
+
+
 def test_continuer_conversation_accumule_les_messages(monkeypatch):
     # test unitaire pur : on ne touche pas Mongo ici (evite le couplage motor/event-loop
     # entre plusieurs asyncio.run() independants dans la meme session de tests).

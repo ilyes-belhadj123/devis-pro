@@ -11,7 +11,7 @@ import './UploadPage.css'
 
 const MAX_PHOTOS = 6
 
-type Point = { x: number; y: number }
+type Point = { x: number; y: number; label?: string }
 type Photo = { file: File; url: string; points: Point[]; qualite?: QualitePhoto }
 
 function UploadPage() {
@@ -70,6 +70,16 @@ function UploadPage() {
     )
   }
 
+  const modifierLabelPoint = (index: number, pointIndex: number, label: string) => {
+    setPhotos((actuelles) =>
+      actuelles.map((photo, i) =>
+        i === index
+          ? { ...photo, points: photo.points.map((p, pi) => (pi === pointIndex ? { ...p, label } : p)) }
+          : photo,
+      ),
+    )
+  }
+
   const eclaircirPhoto = async (index: number) => {
     const photo = photos[index]
     if (!photo) return
@@ -107,7 +117,7 @@ function UploadPage() {
     setIsAnalyzing(true)
     const photoUrls = photos.map((photo) => photo.url)
     const points = photos.flatMap((photo, index) =>
-      photo.points.map((point) => ({ index, x: point.x, y: point.y })),
+      photo.points.map((point) => ({ index, x: point.x, y: point.y, label: point.label?.trim() || undefined })),
     )
     const noteAvecRepere = objetReference
       ? `${note.trim()}${note.trim() ? ' ' : ''}Un objet de taille connue (pièce de monnaie, carte bancaire, règle...) est visible sur au moins une des photos : utilise-le comme repère d'échelle prioritaire pour tes estimations de dimensions.`
@@ -280,6 +290,26 @@ function UploadPage() {
           Touchez une photo pour indiquer un ou plusieurs emplacements précis du problème (facultatif) — un zoom
           automatique de chaque zone sera envoyé en plus à l'IA
         </p>
+      )}
+
+      {photos.some((photo) => photo.points.length > 0) && (
+        <div className="point-labels">
+          {photos.map((photo, photoIndex) =>
+            photo.points.map((point, pointIndex) => (
+              <div className="point-label-row" key={`${photoIndex}-${pointIndex}`}>
+                <span className="point-label-tag">
+                  Photo {photoIndex + 1} · repère {pointIndex + 1}
+                </span>
+                <input
+                  type="text"
+                  placeholder="Précisez ce repère (ex: fissure active, joint qui suinte…)"
+                  value={point.label ?? ''}
+                  onChange={(e) => modifierLabelPoint(photoIndex, pointIndex, e.target.value)}
+                />
+              </div>
+            )),
+          )}
+        </div>
       )}
 
       {photosAvecSouci.length > 0 && (

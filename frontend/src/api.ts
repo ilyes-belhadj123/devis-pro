@@ -61,7 +61,7 @@ export type DiagnosticApi = {
   session_id?: string | null
 }
 
-export type PointReperageApi = { index: number; x: number; y: number }
+export type PointReperageApi = { index: number; x: number; y: number; label?: string }
 
 export async function analyserPhoto(
   fichiers: File[],

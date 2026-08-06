@@ -155,11 +155,13 @@ def _construire_messages_initiaux(
         except (KeyError, TypeError, ValueError):
             continue
         if 0 <= index < len(photos):
+            label = str(point.get("label") or "").strip()
+            precision_label = f' ("{label}")' if label else ""
             consigne += (
                 f" Sur la photo {index + 1}, le client a indique precisement la zone du probleme aux "
                 f"coordonnees relatives environ {round(x * 100)}% depuis la gauche et {round(y * 100)}% depuis "
-                "le haut de cette photo : concentre ton observation sur cette zone en priorite si plusieurs "
-                "elements sont visibles sur cette photo."
+                f"le haut de cette photo{precision_label} : concentre ton observation sur cette zone en priorite "
+                "si plusieurs elements sont visibles sur cette photo."
             )
     contenu: list[dict] = [{"type": "text", "text": consigne}]
     for image_bytes, content_type in photos:

@@ -45,6 +45,23 @@ def test_analyser_accepte_note_et_point_de_reperage(client):
     assert resultat["session_id"] is not None
 
 
+def test_analyser_accepte_plusieurs_points_avec_legende(client):
+    client.delete("/parametres/openrouter")
+
+    response = client.post(
+        "/diagnostic/analyser",
+        files={"photos": ("test.jpg", b"contenu-image-factice", "image/jpeg")},
+        data={
+            "points": (
+                '[{"index": 0, "x": 0.2, "y": 0.2, "label": "fissure principale, active"}, '
+                '{"index": 0, "x": 0.7, "y": 0.7, "label": ""}]'
+            ),
+        },
+    )
+    assert response.status_code == 200
+    assert response.json()["degrade"] is True
+
+
 def test_analyser_ignore_points_mal_formes(client):
     client.delete("/parametres/openrouter")
 
