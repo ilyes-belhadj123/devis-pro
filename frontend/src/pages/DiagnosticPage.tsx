@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { affinerDiagnostic, genererDevis, type DevisApi, type DiagnosticApi } from '../api'
 import Alert from '../components/Alert'
@@ -18,7 +18,9 @@ function DiagnosticPage() {
   const [diagnostic, setDiagnostic] = useState<DiagnosticApi>(state?.diagnostic ?? mockDiagnostic)
   const [isScanning, setIsScanning] = useState(true)
   const [reponseChoisie, setReponseChoisie] = useState<string | null>(null)
-  const [reponseLibre, setReponseLibre] = useState('')
+  const [reponsesQuestions, setReponsesQuestions] = useState<string[]>(() =>
+    (state?.diagnostic ?? mockDiagnostic).questions_clarification.map(() => ''),
+  )
   const [isAffining, setIsAffining] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const [erreur, setErreur] = useState<string | null>(null)
@@ -29,6 +31,10 @@ function DiagnosticPage() {
     const timer = setTimeout(() => setIsScanning(false), 1800)
     return () => clearTimeout(timer)
   }, [])
+
+  useEffect(() => {
+    setReponsesQuestions(diagnostic.questions_clarification.map(() => ''))
+  }, [diagnostic.questions_clarification])
 
   const ajouterPhotoClarification = async (fichiers: FileList | null) => {
     if (!fichiers || fichiers.length === 0) return
@@ -58,13 +64,21 @@ function DiagnosticPage() {
         clarificationPhotos.map((photo) => photo.file),
       )
       setDiagnostic(diagnosticAffine)
-      setReponseLibre('')
       setClarificationPhotos([])
     } catch (err) {
       setErreur(err instanceof Error ? err.message : "Impossible d'affiner le diagnostic pour le moment.")
     } finally {
       setIsAffining(false)
     }
+  }
+
+  const soumettreReponsesQuestions = (e: FormEvent) => {
+    e.preventDefault()
+    const paires = diagnostic.questions_clarification
+      .map((question, i) => ({ question, reponse: (reponsesQuestions[i] ?? '').trim() }))
+      .filter((paire) => paire.reponse)
+    const texteReponse = paires.map((paire) => `${paire.question} → ${paire.reponse}`).join('\n')
+    repondreClarification(texteReponse)
   }
 
   const genererLeDevis = async () => {
@@ -160,30 +174,32 @@ function DiagnosticPage() {
 
             {diagnostic.questions_clarification.length > 0 && (
               <div className="clarify">
-                {diagnostic.questions_clarification.map((question) => (
-                  <p key={question} className="clarify-q">
-                    {question}
-                  </p>
-                ))}
-
-                <form
-                  className="clarify-form"
-                  onSubmit={(e) => {
-                    e.preventDefault()
-                    repondreClarification(reponseLibre)
-                  }}
-                >
-                  <input
-                    type="text"
-                    placeholder="Votre réponse (ex: environ 8 m²)…"
-                    value={reponseLibre}
-                    onChange={(e) => setReponseLibre(e.target.value)}
-                    disabled={isAffining}
-                  />
+                <form className="clarify-form" onSubmit={soumettreReponsesQuestions}>
+                  <div className="clarify-questions">
+                    {diagnostic.questions_clarification.map((question, i) => (
+                      <div className="clarify-question-row" key={question}>
+                        <p className="clarify-q">{question}</p>
+                        <input
+                          type="text"
+                          placeholder="Votre réponse (ex: environ 8 m²)…"
+                          value={reponsesQuestions[i] ?? ''}
+                          onChange={(e) =>
+                            setReponsesQuestions((actuelles) =>
+                              actuelles.map((r, ri) => (ri === i ? e.target.value : r)),
+                            )
+                          }
+                          disabled={isAffining}
+                        />
+                      </div>
+                    ))}
+                  </div>
                   <button
                     type="submit"
                     className="btn btn-primary"
-                    disabled={isAffining || (!reponseLibre.trim() && clarificationPhotos.length === 0)}
+                    disabled={
+                      isAffining ||
+                      (reponsesQuestions.every((r) => !r.trim()) && clarificationPhotos.length === 0)
+                    }
                   >
                     {isAffining ? '…' : 'Valider'}
                   </button>
