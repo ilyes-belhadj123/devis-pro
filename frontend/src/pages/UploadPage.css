@@ -123,6 +123,7 @@
   width: 20px;
   height: 20px;
   border-radius: 50%;
+  border: none;
   background: var(--color-accent-amber);
   color: #1a1712;
   font-size: 0.6875rem;
@@ -131,6 +132,20 @@
   align-items: center;
   justify-content: center;
   cursor: default;
+  padding: 0;
+}
+
+.photo-thumb-warning-fix {
+  cursor: pointer;
+}
+
+.photo-thumb-warning-fix:hover {
+  filter: brightness(1.1);
+}
+
+.photo-thumb-warning-fix:disabled {
+  cursor: wait;
+  opacity: 0.7;
 }
 
 .quality-warning {
@@ -221,6 +236,21 @@
   50% {
     box-shadow: 0 0 0 5px rgba(255, 90, 60, 0.12);
   }
+}
+
+.reference-check {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-size: 0.78125rem;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.reference-check input {
+  margin-top: 2px;
+  flex-shrink: 0;
+  cursor: pointer;
 }
 
 .note-field textarea {

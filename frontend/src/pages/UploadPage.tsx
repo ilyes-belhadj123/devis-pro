@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { analyserPhoto } from '../api'
 import { mockDiagnostic } from '../mocks/mockData'
 import { compresserImage } from '../utils/compresserImage'
+import { eclaircirImage } from '../utils/eclaircirImage'
 import { evaluerQualitePhoto, type QualitePhoto } from '../utils/evaluerQualitePhoto'
 import { useDicteeVocale } from '../utils/useDicteeVocale'
 import './UploadPage.css'
@@ -18,9 +19,11 @@ function UploadPage() {
   const cameraInputRef = useRef<HTMLInputElement>(null)
   const [photos, setPhotos] = useState<Photo[]>([])
   const [note, setNote] = useState('')
+  const [objetReference, setObjetReference] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [isPreparing, setIsPreparing] = useState(false)
+  const [eclaircissementEnCours, setEclaircissementEnCours] = useState<number | null>(null)
 
   const ajouterFichiers = async (fichiers: FileList | null) => {
     if (!fichiers || fichiers.length === 0) return
@@ -60,6 +63,22 @@ function UploadPage() {
     setPhotos((actuelles) => actuelles.map((photo, i) => (i === index ? { ...photo, point: undefined } : photo)))
   }
 
+  const eclaircirPhoto = async (index: number) => {
+    const photo = photos[index]
+    if (!photo) return
+    setEclaircissementEnCours(index)
+    try {
+      const fichierEclairci = await eclaircirImage(photo.file)
+      const qualite = await evaluerQualitePhoto(fichierEclairci)
+      const url = URL.createObjectURL(fichierEclairci)
+      setPhotos((actuelles) =>
+        actuelles.map((p, i) => (i === index ? { ...p, file: fichierEclairci, url, qualite } : p)),
+      )
+    } finally {
+      setEclaircissementEnCours(null)
+    }
+  }
+
   const handleDrop = (event: DragEvent<HTMLDivElement>) => {
     event.preventDefault()
     setIsDragging(false)
@@ -83,8 +102,11 @@ function UploadPage() {
     const points = photos
       .map((photo, index) => (photo.point ? { index, x: photo.point.x, y: photo.point.y } : null))
       .filter((point): point is { index: number; x: number; y: number } => point !== null)
+    const noteAvecRepere = objetReference
+      ? `${note.trim()}${note.trim() ? ' ' : ''}Un objet de taille connue (pièce de monnaie, carte bancaire, règle...) est visible sur au moins une des photos : utilise-le comme repère d'échelle prioritaire pour tes estimations de dimensions.`
+      : note
     try {
-      const diagnostic = await analyserPhoto(photos.map((photo) => photo.file), note, points)
+      const diagnostic = await analyserPhoto(photos.map((photo) => photo.file), noteAvecRepere, points)
       navigate('/diagnostic', { state: { photoUrls, diagnostic } })
     } catch (err) {
       console.error('Analyse photo indisponible, bascule en mode dégradé :', err)
@@ -144,17 +166,26 @@ function UploadPage() {
                     marquerPoint(index, e)
                   }}
                 />
-                {(photo.qualite?.floue || photo.qualite?.sombre) && (
-                  <span
-                    className="photo-thumb-warning"
+                {photo.qualite?.sombre && (
+                  <button
+                    type="button"
+                    className="photo-thumb-warning photo-thumb-warning-fix"
+                    disabled={eclaircissementEnCours === index}
                     title={
-                      photo.qualite?.floue && photo.qualite?.sombre
-                        ? 'Photo floue et sombre — envisagez de la remplacer'
-                        : photo.qualite?.floue
-                          ? 'Photo floue — envisagez de la remplacer'
-                          : 'Photo sombre — envisagez de la remplacer'
+                      photo.qualite?.floue
+                        ? 'Photo sombre (et un peu floue) — cliquez pour éclaircir automatiquement'
+                        : 'Photo sombre — cliquez pour éclaircir automatiquement'
                     }
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      eclaircirPhoto(index)
+                    }}
                   >
+                    {eclaircissementEnCours === index ? '…' : '⚠'}
+                  </button>
+                )}
+                {!photo.qualite?.sombre && photo.qualite?.floue && (
+                  <span className="photo-thumb-warning" title="Photo floue — envisagez de la remplacer">
                     ⚠
                   </span>
                 )}
@@ -232,8 +263,9 @@ function UploadPage() {
 
       {photosAvecSouci.length > 0 && (
         <p className="quality-warning">
-          ⚠ {photosAvecSouci.length > 1 ? `${photosAvecSouci.length} photos semblent` : '1 photo semble'} floue(s)
-          ou sombre(s) — vous pouvez la remplacer pour un meilleur diagnostic.
+          ⚠ {photosAvecSouci.length > 1 ? `${photosAvecSouci.length} photos semblent` : '1 photo semble'} floue(s) ou
+          sombre(s) — cliquez sur l'icône d'une photo sombre pour l'éclaircir automatiquement, ou remplacez une
+          photo floue.
         </p>
       )}
 
@@ -260,6 +292,14 @@ function UploadPage() {
             onChange={(e) => setNote(e.target.value)}
             rows={2}
           />
+          <label className="reference-check">
+            <input
+              type="checkbox"
+              checked={objetReference}
+              onChange={(e) => setObjetReference(e.target.checked)}
+            />
+            Un objet de taille connue est visible sur une photo (pièce de monnaie, carte, règle…)
+          </label>
         </div>
       )}
 
