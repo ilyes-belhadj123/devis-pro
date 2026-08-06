@@ -37,8 +37,10 @@ PROMPT_SYSTEME = (
     "bricolage (mur, plomberie, fixation, electricite, jardin) pour generer un devis chiffre realiste.\n\n"
     + PROMPT_CRITERES_PAR_CATEGORIE
     + "ETAPE 1 - OBSERVATION VISUELLE (obligatoire, avant toute conclusion) :\n"
-    "Examine la photo en detail et decris precisement ce que tu vois reellement, sans supposer ce que tu ne "
-    "peux pas voir : nature et etat du support/materiau, etendue visible du probleme (longueur/surface/nombre "
+    "Examine la ou les photos fournies en detail et decris precisement ce que tu vois reellement, sans "
+    "supposer ce que tu ne peux pas voir. Si plusieurs photos sont fournies, elles peuvent montrer differents "
+    "angles ou zooms du meme probleme : combine les informations de toutes les photos avant de conclure plutot "
+    "que de n'en analyser qu'une seule. Decris : nature et etat du support/materiau, etendue visible du probleme (longueur/surface/nombre "
     "d'elements estimes a partir d'objets de reference visibles dans le cadre - une prise de courant fait "
     "environ 8x8 cm, une porte standard environ 80 cm de large, un carrelage courant 30x30 cm ou 60x60 cm, une "
     "brique environ 22 cm de long), les criteres cles de la categorie probable (voir liste ci-dessus), et tout "
@@ -128,17 +130,27 @@ def _basculer_interieur_exterieur(probleme_cle: str, reponse: str) -> str:
     return bascule if bascule in PROBLEMES_CONNUS else probleme_cle
 
 
-def _construire_messages_initiaux(content_type: str, contenu_image: bytes) -> list[dict]:
-    image_b64 = base64.b64encode(contenu_image).decode("ascii")
+def _construire_messages_initiaux(photos: list[tuple[bytes, str]], note: str | None = None) -> list[dict]:
+    consigne = (
+        "Analyse la photo suivante et identifie le probleme a resoudre."
+        if len(photos) == 1
+        else f"Analyse les {len(photos)} photos suivantes (differents angles/zooms du meme probleme) et "
+        "identifie le probleme a resoudre."
+    )
+    if note and note.strip():
+        consigne += (
+            f" Le client a ajoute cette precision : \"{note.strip()}\". Utilise-la comme un indice "
+            "supplementaire (ce n'est pas necessairement visible sur la photo) mais base ta classification "
+            "et tes observations en priorite sur ce que tu vois reellement."
+        )
+    contenu: list[dict] = [{"type": "text", "text": consigne}]
+    for image_bytes, content_type in photos:
+        image_b64 = base64.b64encode(image_bytes).decode("ascii")
+        contenu.append({"type": "image_url", "image_url": {"url": f"data:{content_type};base64,{image_b64}"}})
+
     return [
         {"role": "system", "content": PROMPT_SYSTEME},
-        {
-            "role": "user",
-            "content": [
-                {"type": "text", "text": "Analyse cette photo et identifie le probleme a resoudre."},
-                {"type": "image_url", "image_url": {"url": f"data:{content_type};base64,{image_b64}"}},
-            ],
-        },
+        {"role": "user", "content": contenu},
     ]
 
 
@@ -193,8 +205,8 @@ async def _finaliser_resultat(resultat: dict) -> dict:
     }
 
 
-async def analyser_photo(contenu_image: bytes, content_type: str) -> tuple[dict, list[dict]]:
-    messages = _construire_messages_initiaux(content_type, contenu_image)
+async def analyser_photo(photos: list[tuple[bytes, str]], note: str | None = None) -> tuple[dict, list[dict]]:
+    messages = _construire_messages_initiaux(photos, note)
 
     try:
         texte_reponse = await _appeler_modele(messages)

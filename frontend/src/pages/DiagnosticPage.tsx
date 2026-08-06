@@ -8,8 +8,9 @@ import './DiagnosticPage.css'
 function DiagnosticPage() {
   const navigate = useNavigate()
   const location = useLocation()
-  const state = location.state as { photoUrl?: string; diagnostic?: DiagnosticApi } | null
-  const photoUrl = state?.photoUrl ?? null
+  const state = location.state as { photoUrls?: string[]; diagnostic?: DiagnosticApi } | null
+  const photoUrls = state?.photoUrls ?? []
+  const photoUrl = photoUrls[0] ?? null
 
   const [diagnostic, setDiagnostic] = useState<DiagnosticApi>(state?.diagnostic ?? mockDiagnostic)
   const [isScanning, setIsScanning] = useState(true)
@@ -67,34 +68,49 @@ function DiagnosticPage() {
       </span>
 
       <div className="diag-grid">
-        <div className="photo-frame">
-          {photoUrl ? (
-            <img src={photoUrl} alt="Photo analysée" className="scan-photo" />
-          ) : (
-            <div className="scan-photo scan-photo-placeholder">
-              <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="1.5">
-                <path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 011 1v9a1 1 0 01-1 1H4a1 1 0 01-1-1V9a1 1 0 011-1z" />
-                <circle cx="12" cy="13" r="3.4" />
-              </svg>
-            </div>
-          )}
+        <div className="photo-column">
+          <div className="photo-frame">
+            {photoUrl ? (
+              <img src={photoUrl} alt="Photo analysée" className="scan-photo" />
+            ) : (
+              <div className="scan-photo scan-photo-placeholder">
+                <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="1.5">
+                  <path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 011 1v9a1 1 0 01-1 1H4a1 1 0 01-1-1V9a1 1 0 011-1z" />
+                  <circle cx="12" cy="13" r="3.4" />
+                </svg>
+              </div>
+            )}
 
-          {isScanning ? (
-            <div className="scan-line" />
-          ) : (
-            <div className="ring-badge">
-              <div
-                className="ring"
-                style={{
-                  background: `conic-gradient(var(--color-accent-amber) 0% ${pourcentageConfiance}%, rgba(255,255,255,0.18) ${pourcentageConfiance}% 100%)`,
-                }}
-              >
-                <span>{pourcentageConfiance}%</span>
+            {isScanning ? (
+              <div className="scan-line" />
+            ) : (
+              <div className="ring-badge">
+                <div
+                  className="ring"
+                  style={{
+                    background: `conic-gradient(var(--color-accent-amber) 0% ${pourcentageConfiance}%, rgba(255,255,255,0.18) ${pourcentageConfiance}% 100%)`,
+                  }}
+                >
+                  <span>{pourcentageConfiance}%</span>
+                </div>
+                <div className="ring-badge-text">
+                  Confiance
+                  <b>{diagnostic.confiance >= 0.75 ? 'Diagnostic fiable' : 'À préciser'}</b>
+                </div>
               </div>
-              <div className="ring-badge-text">
-                Confiance
-                <b>{diagnostic.confiance >= 0.75 ? 'Diagnostic fiable' : 'À préciser'}</b>
-              </div>
+            )}
+          </div>
+
+          {photoUrls.length > 1 && (
+            <div className="photo-thumbs-strip">
+              {photoUrls.map((url, index) => (
+                <img
+                  key={url}
+                  src={url}
+                  alt={`Photo ${index + 1}`}
+                  className={`photo-thumb-mini ${index === 0 ? 'active' : ''}`}
+                />
+              ))}
             </div>
           )}
         </div>

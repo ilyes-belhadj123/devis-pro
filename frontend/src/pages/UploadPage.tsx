@@ -5,43 +5,64 @@ import { mockDiagnostic } from '../mocks/mockData'
 import { compresserImage } from '../utils/compresserImage'
 import './UploadPage.css'
 
+const MAX_PHOTOS = 6
+
+type Photo = { file: File; url: string }
+
 function UploadPage() {
   const navigate = useNavigate()
   const inputRef = useRef<HTMLInputElement>(null)
   const cameraInputRef = useRef<HTMLInputElement>(null)
-  const [photoFile, setPhotoFile] = useState<File | null>(null)
-  const [photoUrl, setPhotoUrl] = useState<string | null>(null)
+  const [photos, setPhotos] = useState<Photo[]>([])
+  const [note, setNote] = useState('')
   const [isDragging, setIsDragging] = useState(false)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [isPreparing, setIsPreparing] = useState(false)
 
-  const handleFile = async (file: File | undefined) => {
-    if (!file) return
+  const ajouterFichiers = async (fichiers: FileList | null) => {
+    if (!fichiers || fichiers.length === 0) return
+    const placesRestantes = MAX_PHOTOS - photos.length
+    if (placesRestantes <= 0) return
+    const aTraiter = Array.from(fichiers).slice(0, placesRestantes)
+
     setIsPreparing(true)
     try {
-      const fichierPret = await compresserImage(file)
-      setPhotoFile(fichierPret)
-      setPhotoUrl(URL.createObjectURL(fichierPret))
+      const nouvellesPhotos = await Promise.all(
+        aTraiter.map(async (fichier) => {
+          const fichierPret = await compresserImage(fichier)
+          return { file: fichierPret, url: URL.createObjectURL(fichierPret) }
+        }),
+      )
+      setPhotos((actuelles) => [...actuelles, ...nouvellesPhotos])
     } finally {
       setIsPreparing(false)
     }
   }
 
+  const retirerPhoto = (index: number) => {
+    setPhotos((actuelles) => actuelles.filter((_, i) => i !== index))
+  }
+
   const handleDrop = (event: DragEvent<HTMLDivElement>) => {
     event.preventDefault()
     setIsDragging(false)
-    handleFile(event.dataTransfer.files[0])
+    ajouterFichiers(event.dataTransfer.files)
+  }
+
+  const ouvrirSelecteur = () => {
+    if (photos.length === 0) inputRef.current?.click()
   }
 
   const analyser = async () => {
-    if (!photoFile) return
+    if (photos.length === 0) return
     setIsAnalyzing(true)
+    const photoUrls = photos.map((photo) => photo.url)
     try {
-      const diagnostic = await analyserPhoto(photoFile)
-      navigate('/diagnostic', { state: { photoUrl, diagnostic } })
+      const diagnostic = await analyserPhoto(photos.map((photo) => photo.file), note)
+      navigate('/diagnostic', { state: { photoUrls, diagnostic } })
     } catch (err) {
       console.error('Analyse photo indisponible, bascule en mode dégradé :', err)
-      navigate('/diagnostic', { state: { photoUrl, diagnostic: { ...mockDiagnostic, degrade: true } } })
+      navigate('/diagnostic', { state: { photoUrls, diagnostic: { ...mockDiagnostic, degrade: true } } })
     } finally {
       setIsAnalyzing(false)
     }
@@ -68,25 +89,55 @@ function UploadPage() {
       </p>
 
       <div
-        className={`dropzone ${isDragging ? 'dropzone-active' : ''} ${photoUrl ? 'dropzone-filled' : ''}`}
+        className={`dropzone ${isDragging ? 'dropzone-active' : ''} ${photos.length > 0 ? 'dropzone-filled' : ''}`}
         onDragOver={(e) => {
           e.preventDefault()
           setIsDragging(true)
         }}
         onDragLeave={() => setIsDragging(false)}
         onDrop={handleDrop}
-        onClick={() => inputRef.current?.click()}
+        onClick={ouvrirSelecteur}
         onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
+          if ((e.key === 'Enter' || e.key === ' ') && photos.length === 0) {
             e.preventDefault()
-            inputRef.current?.click()
+            ouvrirSelecteur()
           }
         }}
         role="button"
         tabIndex={0}
       >
-        {photoUrl ? (
-          <img src={photoUrl} alt="Photo du projet" className="dropzone-preview" />
+        {photos.length > 0 ? (
+          <div className="photo-grid">
+            {photos.map((photo, index) => (
+              <div className="photo-thumb" key={photo.url}>
+                <img src={photo.url} alt={`Photo du projet ${index + 1}`} />
+                <button
+                  type="button"
+                  className="photo-thumb-remove"
+                  aria-label="Retirer cette photo"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    retirerPhoto(index)
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+            {photos.length < MAX_PHOTOS && (
+              <button
+                type="button"
+                className="photo-thumb photo-thumb-add"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  inputRef.current?.click()
+                }}
+              >
+                <span>+</span>
+                Ajouter
+              </button>
+            )}
+          </div>
         ) : (
           <>
             <span className="dropzone-icon">
@@ -95,8 +146,10 @@ function UploadPage() {
               </svg>
             </span>
             <div>
-              <p className="dropzone-title">Déposez une photo, ou prenez-en une</p>
-              <p className="dropzone-subtitle">JPG · PNG · HEIC — 1 photo suffit pour commencer</p>
+              <p className="dropzone-title">Déposez une ou plusieurs photos, ou prenez-en une</p>
+              <p className="dropzone-subtitle">
+                JPG · PNG · HEIC — plusieurs angles aident l'IA à mieux estimer votre projet
+              </p>
             </div>
           </>
         )}
@@ -104,14 +157,42 @@ function UploadPage() {
           ref={inputRef}
           type="file"
           accept="image/jpeg,image/png,image/heic"
+          multiple
           hidden
-          onChange={(e) => handleFile(e.target.files?.[0])}
+          onChange={(e) => {
+            ajouterFichiers(e.target.files)
+            e.target.value = ''
+          }}
         />
       </div>
 
+      {photos.length > 0 && (
+        <div className="note-field">
+          <label htmlFor="note-diagnostic">Une précision à ajouter ? (facultatif)</label>
+          <textarea
+            id="note-diagnostic"
+            placeholder="Ex : la fuite apparaît seulement quand on ouvre l'eau chaude, ça fait 2 semaines que ça coule…"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            rows={2}
+          />
+        </div>
+      )}
+
       <div className="btn-row">
-        <button type="button" className="btn btn-primary" disabled={!photoFile || isAnalyzing || isPreparing} onClick={analyser}>
-          {isPreparing ? 'Préparation…' : isAnalyzing ? 'Analyse en cours…' : 'Analyser la photo'}
+        <button
+          type="button"
+          className="btn btn-primary"
+          disabled={photos.length === 0 || isAnalyzing || isPreparing}
+          onClick={analyser}
+        >
+          {isPreparing
+            ? 'Préparation…'
+            : isAnalyzing
+              ? 'Analyse en cours…'
+              : photos.length > 1
+                ? `Analyser les ${photos.length} photos`
+                : 'Analyser la photo'}
         </button>
         <button type="button" className="btn btn-secondary" onClick={() => cameraInputRef.current?.click()}>
           Ouvrir l'appareil photo
@@ -122,7 +203,10 @@ function UploadPage() {
           accept="image/jpeg,image/png,image/heic"
           capture="environment"
           hidden
-          onChange={(e) => handleFile(e.target.files?.[0])}
+          onChange={(e) => {
+            ajouterFichiers(e.target.files)
+            e.target.value = ''
+          }}
         />
       </div>
     </section>

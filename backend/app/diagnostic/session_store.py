@@ -1,5 +1,5 @@
-"""Cache en memoire des sessions de diagnostic (photo + historique de conversation),
-pour permettre un dialogue multi-tours et affiner un devis sans redemander la photo au
+"""Cache en memoire des sessions de diagnostic (photo(s) + historique de conversation),
+pour permettre un dialogue multi-tours et affiner un devis sans redemander les photos au
 client. Suffisant pour un prototype de demo mono-process ; a remplacer par un stockage
 partage si l'API tourne un jour en plusieurs instances."""
 
@@ -8,9 +8,9 @@ import uuid
 _sessions: dict[str, dict] = {}
 
 
-def creer_session(contenu: bytes, content_type: str) -> str:
+def creer_session(photos: list[tuple[bytes, str]]) -> str:
     session_id = str(uuid.uuid4())
-    _sessions[session_id] = {"contenu": contenu, "content_type": content_type, "messages": None}
+    _sessions[session_id] = {"photos": photos, "messages": None}
     return session_id
 
 
