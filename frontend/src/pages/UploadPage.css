@@ -182,17 +182,54 @@
   flex-wrap: wrap;
 }
 
+.precisions-panel {
+  border: 1.5px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-surface-sunken);
+}
+
+.precisions-panel summary {
+  cursor: pointer;
+  padding: var(--space-3) var(--space-4);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  list-style: none;
+}
+
+.precisions-panel summary::-webkit-details-marker {
+  display: none;
+}
+
+.precisions-panel summary::before {
+  content: '▸';
+  display: inline-block;
+  margin-right: var(--space-2);
+  color: var(--color-accent-copper);
+  transition: transform 0.15s ease;
+}
+
+.precisions-panel[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.precisions-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: 0 var(--space-4) var(--space-4);
+}
+
 .point-hint {
   font-size: 0.75rem;
   color: var(--color-text-faint);
-  margin: calc(-1 * var(--space-2)) 0 0;
+  margin: 0;
 }
 
 .point-labels {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  margin-top: calc(-1 * var(--space-1));
 }
 
 .point-label-row {

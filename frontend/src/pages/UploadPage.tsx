@@ -285,33 +285,6 @@ function UploadPage() {
         />
       </div>
 
-      {photos.length > 0 && (
-        <p className="point-hint">
-          Touchez une photo pour indiquer un ou plusieurs emplacements précis du problème (facultatif) — un zoom
-          automatique de chaque zone sera envoyé en plus à l'IA
-        </p>
-      )}
-
-      {photos.some((photo) => photo.points.length > 0) && (
-        <div className="point-labels">
-          {photos.map((photo, photoIndex) =>
-            photo.points.map((point, pointIndex) => (
-              <div className="point-label-row" key={`${photoIndex}-${pointIndex}`}>
-                <span className="point-label-tag">
-                  Photo {photoIndex + 1} · repère {pointIndex + 1}
-                </span>
-                <input
-                  type="text"
-                  placeholder="Précisez ce repère (ex: fissure active, joint qui suinte…)"
-                  value={point.label ?? ''}
-                  onChange={(e) => modifierLabelPoint(photoIndex, pointIndex, e.target.value)}
-                />
-              </div>
-            )),
-          )}
-        </div>
-      )}
-
       {photosAvecSouci.length > 0 && (
         <p className="quality-warning">
           ⚠ {photosAvecSouci.length > 1 ? `${photosAvecSouci.length} photos semblent` : '1 photo semble'} floue(s) ou
@@ -321,37 +294,67 @@ function UploadPage() {
       )}
 
       {photos.length > 0 && (
-        <div className="note-field">
-          <div className="note-field-header">
-            <label htmlFor="note-diagnostic">Une précision à ajouter ? (facultatif)</label>
-            {dicteeDisponible && (
-              <button
-                type="button"
-                className={`mic-button ${ecoute ? 'active' : ''}`}
-                onClick={basculerDictee}
-                aria-label={ecoute ? 'Arrêter la dictée' : 'Dicter la précision'}
-                title={ecoute ? 'Arrêter la dictée' : 'Dicter la précision'}
-              >
-                🎤
-              </button>
+        <details className="precisions-panel">
+          <summary>Précisions (facultatif) — améliore la fiabilité du diagnostic</summary>
+          <div className="precisions-content">
+            <p className="point-hint">
+              Touchez une photo pour indiquer un ou plusieurs emplacements précis du problème — un zoom automatique
+              de chaque zone sera envoyé en plus à l'IA
+            </p>
+
+            {photos.some((photo) => photo.points.length > 0) && (
+              <div className="point-labels">
+                {photos.map((photo, photoIndex) =>
+                  photo.points.map((point, pointIndex) => (
+                    <div className="point-label-row" key={`${photoIndex}-${pointIndex}`}>
+                      <span className="point-label-tag">
+                        Photo {photoIndex + 1} · repère {pointIndex + 1}
+                      </span>
+                      <input
+                        type="text"
+                        placeholder="Précisez ce repère (ex: fissure active, joint qui suinte…)"
+                        value={point.label ?? ''}
+                        onChange={(e) => modifierLabelPoint(photoIndex, pointIndex, e.target.value)}
+                      />
+                    </div>
+                  )),
+                )}
+              </div>
             )}
+
+            <div className="note-field">
+              <div className="note-field-header">
+                <label htmlFor="note-diagnostic">Une précision à ajouter ?</label>
+                {dicteeDisponible && (
+                  <button
+                    type="button"
+                    className={`mic-button ${ecoute ? 'active' : ''}`}
+                    onClick={basculerDictee}
+                    aria-label={ecoute ? 'Arrêter la dictée' : 'Dicter la précision'}
+                    title={ecoute ? 'Arrêter la dictée' : 'Dicter la précision'}
+                  >
+                    🎤
+                  </button>
+                )}
+              </div>
+              <textarea
+                id="note-diagnostic"
+                placeholder="Ex : la fuite apparaît seulement quand on ouvre l'eau chaude, ça fait 2 semaines que ça coule…"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                rows={2}
+              />
+              <label className="reference-check">
+                <input
+                  type="checkbox"
+                  checked={objetReference}
+                  onChange={(e) => setObjetReference(e.target.checked)}
+                />
+                Un objet de taille connue est visible sur une photo (pièce de monnaie, carte, règle…)
+              </label>
+            </div>
           </div>
-          <textarea
-            id="note-diagnostic"
-            placeholder="Ex : la fuite apparaît seulement quand on ouvre l'eau chaude, ça fait 2 semaines que ça coule…"
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            rows={2}
-          />
-          <label className="reference-check">
-            <input
-              type="checkbox"
-              checked={objetReference}
-              onChange={(e) => setObjetReference(e.target.checked)}
-            />
-            Un objet de taille connue est visible sur une photo (pièce de monnaie, carte, règle…)
-          </label>
-        </div>
+        </details>
       )}
 
       <div className="btn-row">
