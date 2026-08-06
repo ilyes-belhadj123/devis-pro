@@ -49,6 +49,65 @@ def test_continuer_conversation_accumule_les_messages(monkeypatch):
     assert nouveaux_messages[3]["role"] == "assistant"
 
 
+def test_continuer_conversation_inclut_les_suggestions_alignees(monkeypatch):
+    async def fake_appeler_modele(messages):
+        return (
+            '{"probleme_cle": "mur_fissure_interieur", "probleme_label": "Mur fissuré", '
+            '"confiance": 0.6, "questions_clarification": ["Surface ?", "Cause ?"], '
+            '"suggestions_clarification": [["moins de 5 m2", "plus de 5 m2"], []]}'
+        )
+
+    async def fake_categorie_pour_probleme(probleme_cle):
+        return "peinture"
+
+    monkeypatch.setattr(service, "_appeler_modele", fake_appeler_modele)
+    monkeypatch.setattr(service, "_categorie_pour_probleme", fake_categorie_pour_probleme)
+
+    messages_initiaux = [{"role": "system", "content": "..."}, {"role": "user", "content": "photo"}]
+    resultat, _ = asyncio.run(service.continuer_conversation(messages_initiaux, "reponse"))
+
+    assert resultat["suggestions_clarification"] == [["moins de 5 m2", "plus de 5 m2"], []]
+
+
+def test_continuer_conversation_normalise_suggestions_manquantes(monkeypatch):
+    async def fake_appeler_modele(messages):
+        return (
+            '{"probleme_cle": "mur_fissure_interieur", "probleme_label": "Mur fissuré", '
+            '"confiance": 0.6, "questions_clarification": ["Surface ?", "Cause ?"]}'
+        )
+
+    async def fake_categorie_pour_probleme(probleme_cle):
+        return "peinture"
+
+    monkeypatch.setattr(service, "_appeler_modele", fake_appeler_modele)
+    monkeypatch.setattr(service, "_categorie_pour_probleme", fake_categorie_pour_probleme)
+
+    messages_initiaux = [{"role": "system", "content": "..."}, {"role": "user", "content": "photo"}]
+    resultat, _ = asyncio.run(service.continuer_conversation(messages_initiaux, "reponse"))
+
+    assert resultat["suggestions_clarification"] == [[], []]
+
+
+def test_continuer_conversation_ignore_suggestions_mal_formees(monkeypatch):
+    async def fake_appeler_modele(messages):
+        return (
+            '{"probleme_cle": "mur_fissure_interieur", "probleme_label": "Mur fissuré", '
+            '"confiance": 0.6, "questions_clarification": ["Surface ?"], '
+            '"suggestions_clarification": "pas une liste"}'
+        )
+
+    async def fake_categorie_pour_probleme(probleme_cle):
+        return "peinture"
+
+    monkeypatch.setattr(service, "_appeler_modele", fake_appeler_modele)
+    monkeypatch.setattr(service, "_categorie_pour_probleme", fake_categorie_pour_probleme)
+
+    messages_initiaux = [{"role": "system", "content": "..."}, {"role": "user", "content": "photo"}]
+    resultat, _ = asyncio.run(service.continuer_conversation(messages_initiaux, "reponse"))
+
+    assert resultat["suggestions_clarification"] == [[]]
+
+
 def test_selectionner_materiel_filtre_les_references_invalides_et_convertit(monkeypatch):
     async def fake_appeler_modele(messages):
         return (

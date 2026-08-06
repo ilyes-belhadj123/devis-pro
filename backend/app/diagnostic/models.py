@@ -8,5 +8,6 @@ class DiagnosticResultat(BaseModel):
     categorie: str
     confiance: float
     questions_clarification: list[str]
+    suggestions_clarification: list[list[str]] = []
     degrade: bool = False
     session_id: str | None = None

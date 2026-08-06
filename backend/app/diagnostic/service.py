@@ -73,7 +73,12 @@ PROMPT_SYSTEME = (
     'utilises le cas echeant>", "probleme_cle": "<une des cles ci-dessus>", "probleme_label": "<description '
     'courte du probleme en francais>", "confiance": <nombre entre 0 et 1>, "questions_clarification": [<1 a 2 '
     "questions chiffrees en francais UNIQUEMENT pour ce qui n'est pas deductible de la photo, sinon liste "
-    "vide>]}"
+    'vide>], "suggestions_clarification": [<pour CHAQUE question ci-dessus, dans le meme ordre, une liste de 2 '
+    "a 4 reponses courtes et concretes correspondant exactement aux choix ou fourchettes proposes dans cette "
+    'question (exemple pour la question "moins de 5 m2, entre 5 et 15 m2, ou plus de 15 m2 ?" : ["moins de 5 '
+    'm2", "entre 5 et 15 m2", "plus de 15 m2"]) ; liste vide [] si cette question precise est ouverte sans '
+    "choix predefinis. Le tableau suggestions_clarification doit avoir exactement autant d'elements que "
+    "questions_clarification, dans le meme ordre.>]}"
 )
 
 PROMPT_MATERIEL_TEMPLATE = (
@@ -214,15 +219,27 @@ async def _finaliser_resultat(resultat: dict) -> dict:
                 "Pouvez-vous préciser le type de problème (mur, plomberie, fixation, électricité, jardin) ?"
             ]
 
+    questions = resultat.get("questions_clarification", [])
     return {
         "probleme_cle": probleme_cle,
         "probleme_label": resultat.get("probleme_label", probleme_cle),
         "observations_visuelles": resultat.get("observations_visuelles", ""),
         "categorie": categorie,
         "confiance": float(resultat.get("confiance", 0.5)),
-        "questions_clarification": resultat.get("questions_clarification", []),
+        "questions_clarification": questions,
+        "suggestions_clarification": _normaliser_suggestions(resultat.get("suggestions_clarification"), questions),
         "degrade": False,
     }
+
+
+def _normaliser_suggestions(suggestions_brutes: object, questions: list[str]) -> list[list[str]]:
+    """Garantit une liste de meme longueur que questions_clarification, meme si l'IA a omis le champ,
+    renvoye un nombre d'elements different, ou un type inattendu (defense contre une reponse mal formee)."""
+    suggestions: list[list[str]] = []
+    for i in range(len(questions)):
+        item = suggestions_brutes[i] if isinstance(suggestions_brutes, list) and i < len(suggestions_brutes) else None
+        suggestions.append([str(option) for option in item] if isinstance(item, list) else [])
+    return suggestions
 
 
 async def analyser_photo(

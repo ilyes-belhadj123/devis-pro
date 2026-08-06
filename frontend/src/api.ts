@@ -57,6 +57,7 @@ export type DiagnosticApi = {
   categorie: string
   confiance: number
   questions_clarification: string[]
+  suggestions_clarification?: string[][]
   degrade: boolean
   session_id?: string | null
 }

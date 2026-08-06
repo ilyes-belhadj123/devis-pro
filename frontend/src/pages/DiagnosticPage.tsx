@@ -176,22 +176,44 @@ function DiagnosticPage() {
               <div className="clarify">
                 <form className="clarify-form" onSubmit={soumettreReponsesQuestions}>
                   <div className="clarify-questions">
-                    {diagnostic.questions_clarification.map((question, i) => (
-                      <div className="clarify-question-row" key={question}>
-                        <p className="clarify-q">{question}</p>
-                        <input
-                          type="text"
-                          placeholder="Votre réponse (ex: environ 8 m²)…"
-                          value={reponsesQuestions[i] ?? ''}
-                          onChange={(e) =>
-                            setReponsesQuestions((actuelles) =>
-                              actuelles.map((r, ri) => (ri === i ? e.target.value : r)),
-                            )
-                          }
-                          disabled={isAffining}
-                        />
-                      </div>
-                    ))}
+                    {diagnostic.questions_clarification.map((question, i) => {
+                      const suggestions = diagnostic.suggestions_clarification?.[i] ?? []
+                      return (
+                        <div className="clarify-question-row" key={question}>
+                          <p className="clarify-q">{question}</p>
+                          <input
+                            type="text"
+                            placeholder="Votre réponse (ex: environ 8 m²)…"
+                            value={reponsesQuestions[i] ?? ''}
+                            onChange={(e) =>
+                              setReponsesQuestions((actuelles) =>
+                                actuelles.map((r, ri) => (ri === i ? e.target.value : r)),
+                              )
+                            }
+                            disabled={isAffining}
+                          />
+                          {suggestions.length > 0 && (
+                            <div className="suggestion-row">
+                              {suggestions.map((suggestion) => (
+                                <button
+                                  key={suggestion}
+                                  type="button"
+                                  className={`suggestion-chip ${reponsesQuestions[i] === suggestion ? 'active' : ''}`}
+                                  disabled={isAffining}
+                                  onClick={() =>
+                                    setReponsesQuestions((actuelles) =>
+                                      actuelles.map((r, ri) => (ri === i ? suggestion : r)),
+                                    )
+                                  }
+                                >
+                                  {suggestion}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
                   </div>
                   <button
                     type="submit"
