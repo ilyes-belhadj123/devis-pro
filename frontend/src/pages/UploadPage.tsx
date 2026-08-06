@@ -12,7 +12,7 @@ import './UploadPage.css'
 const MAX_PHOTOS = 6
 
 type Point = { x: number; y: number }
-type Photo = { file: File; url: string; point?: Point; qualite?: QualitePhoto }
+type Photo = { file: File; url: string; points: Point[]; qualite?: QualitePhoto }
 
 function UploadPage() {
   const navigate = useNavigate()
@@ -38,7 +38,7 @@ function UploadPage() {
         aTraiter.map(async (fichier) => {
           const fichierPret = await compresserImage(fichier)
           const qualite = await evaluerQualitePhoto(fichier)
-          return { file: fichierPret, url: URL.createObjectURL(fichierPret), qualite }
+          return { file: fichierPret, url: URL.createObjectURL(fichierPret), points: [], qualite }
         }),
       )
       setPhotos((actuelles) => [...actuelles, ...nouvellesPhotos])
@@ -57,11 +57,17 @@ function UploadPage() {
       x: (event.clientX - rect.left) / rect.width,
       y: (event.clientY - rect.top) / rect.height,
     }
-    setPhotos((actuelles) => actuelles.map((photo, i) => (i === index ? { ...photo, point } : photo)))
+    setPhotos((actuelles) =>
+      actuelles.map((photo, i) => (i === index ? { ...photo, points: [...photo.points, point] } : photo)),
+    )
   }
 
-  const retirerPoint = (index: number) => {
-    setPhotos((actuelles) => actuelles.map((photo, i) => (i === index ? { ...photo, point: undefined } : photo)))
+  const retirerPoint = (index: number, pointIndex: number) => {
+    setPhotos((actuelles) =>
+      actuelles.map((photo, i) =>
+        i === index ? { ...photo, points: photo.points.filter((_, pi) => pi !== pointIndex) } : photo,
+      ),
+    )
   }
 
   const eclaircirPhoto = async (index: number) => {
@@ -100,16 +106,16 @@ function UploadPage() {
     if (photos.length === 0) return
     setIsAnalyzing(true)
     const photoUrls = photos.map((photo) => photo.url)
-    const points = photos
-      .map((photo, index) => (photo.point ? { index, x: photo.point.x, y: photo.point.y } : null))
-      .filter((point): point is { index: number; x: number; y: number } => point !== null)
+    const points = photos.flatMap((photo, index) =>
+      photo.points.map((point) => ({ index, x: point.x, y: point.y })),
+    )
     const noteAvecRepere = objetReference
       ? `${note.trim()}${note.trim() ? ' ' : ''}Un objet de taille connue (pièce de monnaie, carte bancaire, règle...) est visible sur au moins une des photos : utilise-le comme repère d'échelle prioritaire pour tes estimations de dimensions.`
       : note
     try {
       const zooms = (
         await Promise.all(
-          photos.map((photo) => (photo.point ? recadrerZoom(photo.file, photo.point) : Promise.resolve(null))),
+          photos.flatMap((photo) => photo.points.map((point) => recadrerZoom(photo.file, point))),
         )
       ).filter((fichier): fichier is File => fichier !== null)
 
@@ -200,19 +206,20 @@ function UploadPage() {
                     ⚠
                   </span>
                 )}
-                {photo.point && (
+                {photo.points.map((point, pointIndex) => (
                   <button
+                    key={pointIndex}
                     type="button"
                     className="photo-thumb-point"
-                    style={{ left: `${photo.point.x * 100}%`, top: `${photo.point.y * 100}%` }}
+                    style={{ left: `${point.x * 100}%`, top: `${point.y * 100}%` }}
                     aria-label="Retirer le repère"
                     title="Retirer le repère"
                     onClick={(e) => {
                       e.stopPropagation()
-                      retirerPoint(index)
+                      retirerPoint(index, pointIndex)
                     }}
                   />
-                )}
+                ))}
                 <button
                   type="button"
                   className="photo-thumb-remove"
@@ -270,8 +277,8 @@ function UploadPage() {
 
       {photos.length > 0 && (
         <p className="point-hint">
-          Touchez une photo pour indiquer l'emplacement exact du problème (facultatif) — un zoom automatique de
-          cette zone sera envoyé en plus à l'IA
+          Touchez une photo pour indiquer un ou plusieurs emplacements précis du problème (facultatif) — un zoom
+          automatique de chaque zone sera envoyé en plus à l'IA
         </p>
       )}
 
