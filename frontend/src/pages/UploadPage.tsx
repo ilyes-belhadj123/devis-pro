@@ -5,6 +5,7 @@ import { mockDiagnostic } from '../mocks/mockData'
 import { compresserImage } from '../utils/compresserImage'
 import { eclaircirImage } from '../utils/eclaircirImage'
 import { evaluerQualitePhoto, type QualitePhoto } from '../utils/evaluerQualitePhoto'
+import { recadrerZoom } from '../utils/recadrerZoom'
 import { useDicteeVocale } from '../utils/useDicteeVocale'
 import './UploadPage.css'
 
@@ -106,7 +107,17 @@ function UploadPage() {
       ? `${note.trim()}${note.trim() ? ' ' : ''}Un objet de taille connue (pièce de monnaie, carte bancaire, règle...) est visible sur au moins une des photos : utilise-le comme repère d'échelle prioritaire pour tes estimations de dimensions.`
       : note
     try {
-      const diagnostic = await analyserPhoto(photos.map((photo) => photo.file), noteAvecRepere, points)
+      const zooms = (
+        await Promise.all(
+          photos.map((photo) => (photo.point ? recadrerZoom(photo.file, photo.point) : Promise.resolve(null))),
+        )
+      ).filter((fichier): fichier is File => fichier !== null)
+
+      const diagnostic = await analyserPhoto(
+        [...photos.map((photo) => photo.file), ...zooms],
+        noteAvecRepere,
+        points,
+      )
       navigate('/diagnostic', { state: { photoUrls, diagnostic } })
     } catch (err) {
       console.error('Analyse photo indisponible, bascule en mode dégradé :', err)
@@ -258,7 +269,10 @@ function UploadPage() {
       </div>
 
       {photos.length > 0 && (
-        <p className="point-hint">Touchez une photo pour indiquer l'emplacement exact du problème (facultatif)</p>
+        <p className="point-hint">
+          Touchez une photo pour indiquer l'emplacement exact du problème (facultatif) — un zoom automatique de
+          cette zone sera envoyé en plus à l'IA
+        </p>
       )}
 
       {photosAvecSouci.length > 0 && (
