@@ -241,8 +241,26 @@ async def analyser_photo(
     return resultat, messages
 
 
-async def continuer_conversation(messages: list[dict], reponse_utilisateur: str) -> tuple[dict, list[dict]]:
-    messages = [*messages, {"role": "user", "content": f"Précision apportée par le client : {reponse_utilisateur}"}]
+async def continuer_conversation(
+    messages: list[dict],
+    reponse_utilisateur: str,
+    nouvelles_photos: list[tuple[bytes, str]] | None = None,
+) -> tuple[dict, list[dict]]:
+    texte = f"Précision apportée par le client : {reponse_utilisateur}"
+    if nouvelles_photos:
+        texte += (
+            " Le client a egalement joint une ou plusieurs photos supplementaires a ce message "
+            "(demandees ou ajoutees spontanement) : utilise-les pour affiner ton observation."
+        )
+        contenu: list[dict] = [{"type": "text", "text": texte}]
+        for image_bytes, content_type in nouvelles_photos:
+            image_b64 = base64.b64encode(image_bytes).decode("ascii")
+            contenu.append({"type": "image_url", "image_url": {"url": f"data:{content_type};base64,{image_b64}"}})
+        nouveau_message = {"role": "user", "content": contenu}
+    else:
+        nouveau_message = {"role": "user", "content": texte}
+
+    messages = [*messages, nouveau_message]
 
     try:
         texte_reponse = await _appeler_modele(messages)
@@ -255,10 +273,15 @@ async def continuer_conversation(messages: list[dict], reponse_utilisateur: str)
     return resultat, messages
 
 
-async def affiner_diagnostic(probleme_cle: str, reponse: str, session: dict | None) -> tuple[dict, list[dict] | None]:
+async def affiner_diagnostic(
+    probleme_cle: str,
+    reponse: str,
+    session: dict | None,
+    nouvelles_photos: list[tuple[bytes, str]] | None = None,
+) -> tuple[dict, list[dict] | None]:
     if session is not None and session.get("messages"):
         try:
-            return await continuer_conversation(session["messages"], reponse)
+            return await continuer_conversation(session["messages"], reponse, nouvelles_photos)
         except DiagnosticIndisponible:
             pass
 

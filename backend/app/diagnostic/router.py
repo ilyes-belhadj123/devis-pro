@@ -2,7 +2,7 @@ import json
 
 from fastapi import APIRouter, File, Form, UploadFile
 
-from app.diagnostic.models import AffinerInput, DiagnosticResultat
+from app.diagnostic.models import DiagnosticResultat
 from app.diagnostic.service import DiagnosticIndisponible, affiner_diagnostic, analyser_photo
 from app.diagnostic.session_store import creer_session, mettre_a_jour_messages, recuperer_session
 
@@ -42,9 +42,15 @@ async def analyser(
 
 
 @router.post("/affiner", response_model=DiagnosticResultat)
-async def affiner(payload: AffinerInput) -> DiagnosticResultat:
-    session = recuperer_session(payload.session_id) if payload.session_id else None
-    resultat, messages = await affiner_diagnostic(payload.probleme_cle, payload.reponse, session)
-    if messages is not None and payload.session_id:
-        mettre_a_jour_messages(payload.session_id, messages)
-    return DiagnosticResultat(**resultat, session_id=payload.session_id)
+async def affiner(
+    probleme_cle: str = Form(...),
+    reponse: str = Form(...),
+    session_id: str | None = Form(None),
+    photos: list[UploadFile] = File(default=[]),
+) -> DiagnosticResultat:
+    session = recuperer_session(session_id) if session_id else None
+    nouvelles_photos = [(await photo.read(), photo.content_type or "image/jpeg") for photo in photos]
+    resultat, messages = await affiner_diagnostic(probleme_cle, reponse, session, nouvelles_photos or None)
+    if messages is not None and session_id:
+        mettre_a_jour_messages(session_id, messages)
+    return DiagnosticResultat(**resultat, session_id=session_id)

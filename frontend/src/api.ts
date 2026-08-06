@@ -92,15 +92,19 @@ export async function analyserPhoto(
 export async function affinerDiagnostic(
   diagnostic: DiagnosticApi,
   reponse: string,
+  photos?: File[],
 ): Promise<DiagnosticApi> {
+  const formData = new FormData()
+  formData.append('probleme_cle', diagnostic.probleme_cle)
+  formData.append('reponse', reponse)
+  if (diagnostic.session_id) {
+    formData.append('session_id', diagnostic.session_id)
+  }
+  photos?.forEach((fichier) => formData.append('photos', fichier))
+
   const response = await fetch(`${API_URL}/diagnostic/affiner`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      session_id: diagnostic.session_id ?? null,
-      probleme_cle: diagnostic.probleme_cle,
-      reponse,
-    }),
+    body: formData,
   })
 
   if (!response.ok) {

@@ -60,7 +60,7 @@ def test_analyser_ignore_points_mal_formes(client):
 def test_affiner_sans_session_bascule_interieur_exterieur(client):
     response = client.post(
         "/diagnostic/affiner",
-        json={"session_id": None, "probleme_cle": "mur_fissure_interieur", "reponse": "Extérieur"},
+        data={"session_id": "", "probleme_cle": "mur_fissure_interieur", "reponse": "Extérieur"},
     )
     assert response.status_code == 200
     resultat = response.json()
@@ -72,8 +72,20 @@ def test_affiner_sans_session_bascule_interieur_exterieur(client):
 def test_affiner_reponse_sans_correspondance_garde_la_cle(client):
     response = client.post(
         "/diagnostic/affiner",
-        json={"session_id": None, "probleme_cle": "robinet_qui_fuit", "reponse": "Extérieur"},
+        data={"session_id": "", "probleme_cle": "robinet_qui_fuit", "reponse": "Extérieur"},
     )
     assert response.status_code == 200
     resultat = response.json()
     assert resultat["probleme_cle"] == "robinet_qui_fuit"
+
+
+def test_affiner_accepte_une_photo_supplementaire_sans_session(client):
+    response = client.post(
+        "/diagnostic/affiner",
+        data={"session_id": "", "probleme_cle": "robinet_qui_fuit", "reponse": "Voici un gros plan"},
+        files={"photos": ("detail.jpg", b"contenu-image-factice", "image/jpeg")},
+    )
+    assert response.status_code == 200
+    resultat = response.json()
+    assert resultat["probleme_cle"] == "robinet_qui_fuit"
+    assert resultat["degrade"] is False

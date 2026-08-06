@@ -188,6 +188,65 @@
   font-size: 0.875rem;
 }
 
+.clarify-photo-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.clarify-photo-thumb {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.clarify-photo-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.clarify-photo-thumb button {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 0.6875rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.clarify-photo-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1.5px dashed var(--color-border-strong);
+  padding: 10px 14px;
+  border-radius: var(--radius-pill);
+  font-size: 0.78125rem;
+  color: var(--color-text-secondary);
+  background: var(--color-bg-surface);
+  cursor: pointer;
+  font-family: var(--font-body);
+}
+
+.clarify-photo-add:hover {
+  border-color: var(--color-accent-copper);
+}
+
 .chip-row {
   display: flex;
   gap: var(--space-2);

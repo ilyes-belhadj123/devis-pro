@@ -1,9 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { affinerDiagnostic, genererDevis, type DevisApi, type DiagnosticApi } from '../api'
 import Alert from '../components/Alert'
 import { mockDiagnostic } from '../mocks/mockData'
+import { compresserImage } from '../utils/compresserImage'
 import './DiagnosticPage.css'
+
+type PhotoClarification = { file: File; url: string }
 
 function DiagnosticPage() {
   const navigate = useNavigate()
@@ -19,21 +22,44 @@ function DiagnosticPage() {
   const [isAffining, setIsAffining] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const [erreur, setErreur] = useState<string | null>(null)
+  const [clarificationPhotos, setClarificationPhotos] = useState<PhotoClarification[]>([])
+  const clarificationInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const timer = setTimeout(() => setIsScanning(false), 1800)
     return () => clearTimeout(timer)
   }, [])
 
+  const ajouterPhotoClarification = async (fichiers: FileList | null) => {
+    if (!fichiers || fichiers.length === 0) return
+    const nouvelles = await Promise.all(
+      Array.from(fichiers).map(async (fichier) => {
+        const fichierPret = await compresserImage(fichier)
+        return { file: fichierPret, url: URL.createObjectURL(fichierPret) }
+      }),
+    )
+    setClarificationPhotos((actuelles) => [...actuelles, ...nouvelles])
+  }
+
+  const retirerPhotoClarification = (index: number) => {
+    setClarificationPhotos((actuelles) => actuelles.filter((_, i) => i !== index))
+  }
+
   const repondreClarification = async (reponse: string) => {
-    if (!reponse.trim()) return
-    setReponseChoisie(reponse)
+    if (!reponse.trim() && clarificationPhotos.length === 0) return
+    const texteReponse = reponse.trim() || 'Voici une photo supplémentaire.'
+    setReponseChoisie(reponse || 'Photo ajoutée')
     setIsAffining(true)
     setErreur(null)
     try {
-      const diagnosticAffine = await affinerDiagnostic(diagnostic, reponse)
+      const diagnosticAffine = await affinerDiagnostic(
+        diagnostic,
+        texteReponse,
+        clarificationPhotos.map((photo) => photo.file),
+      )
       setDiagnostic(diagnosticAffine)
       setReponseLibre('')
+      setClarificationPhotos([])
     } catch (err) {
       setErreur(err instanceof Error ? err.message : "Impossible d'affiner le diagnostic pour le moment.")
     } finally {
@@ -154,10 +180,48 @@ function DiagnosticPage() {
                     onChange={(e) => setReponseLibre(e.target.value)}
                     disabled={isAffining}
                   />
-                  <button type="submit" className="btn btn-primary" disabled={isAffining || !reponseLibre.trim()}>
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={isAffining || (!reponseLibre.trim() && clarificationPhotos.length === 0)}
+                  >
                     {isAffining ? '…' : 'Valider'}
                   </button>
                 </form>
+
+                <div className="clarify-photo-row">
+                  {clarificationPhotos.map((photo, index) => (
+                    <div className="clarify-photo-thumb" key={photo.url}>
+                      <img src={photo.url} alt={`Photo ajoutée ${index + 1}`} />
+                      <button
+                        type="button"
+                        aria-label="Retirer cette photo"
+                        onClick={() => retirerPhotoClarification(index)}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    className="clarify-photo-add"
+                    disabled={isAffining}
+                    onClick={() => clarificationInputRef.current?.click()}
+                  >
+                    📷 Ajouter une photo
+                  </button>
+                  <input
+                    ref={clarificationInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/heic"
+                    multiple
+                    hidden
+                    onChange={(e) => {
+                      ajouterPhotoClarification(e.target.files)
+                      e.target.value = ''
+                    }}
+                  />
+                </div>
 
                 <div className="chip-row">
                   {['Intérieur', 'Extérieur'].map((option) => (
