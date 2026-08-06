@@ -116,6 +116,30 @@
   padding: 0;
 }
 
+.photo-thumb-warning {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--color-accent-amber);
+  color: #1a1712;
+  font-size: 0.6875rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+}
+
+.quality-warning {
+  font-size: 0.75rem;
+  color: var(--color-accent-amber);
+  font-weight: 600;
+  margin: calc(-1 * var(--space-1)) 0 0;
+}
+
 .photo-thumb-add {
   display: flex;
   flex-direction: column;

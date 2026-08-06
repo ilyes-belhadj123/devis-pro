@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import { analyserPhoto } from '../api'
 import { mockDiagnostic } from '../mocks/mockData'
 import { compresserImage } from '../utils/compresserImage'
+import { evaluerQualitePhoto, type QualitePhoto } from '../utils/evaluerQualitePhoto'
 import './UploadPage.css'
 
 const MAX_PHOTOS = 6
 
 type Point = { x: number; y: number }
-type Photo = { file: File; url: string; point?: Point }
+type Photo = { file: File; url: string; point?: Point; qualite?: QualitePhoto }
 
 function UploadPage() {
   const navigate = useNavigate()
@@ -31,7 +32,8 @@ function UploadPage() {
       const nouvellesPhotos = await Promise.all(
         aTraiter.map(async (fichier) => {
           const fichierPret = await compresserImage(fichier)
-          return { file: fichierPret, url: URL.createObjectURL(fichierPret) }
+          const qualite = await evaluerQualitePhoto(fichier)
+          return { file: fichierPret, url: URL.createObjectURL(fichierPret), qualite }
         }),
       )
       setPhotos((actuelles) => [...actuelles, ...nouvellesPhotos])
@@ -66,6 +68,8 @@ function UploadPage() {
   const ouvrirSelecteur = () => {
     if (photos.length === 0) inputRef.current?.click()
   }
+
+  const photosAvecSouci = photos.filter((photo) => photo.qualite?.floue || photo.qualite?.sombre)
 
   const analyser = async () => {
     if (photos.length === 0) return
@@ -135,6 +139,20 @@ function UploadPage() {
                     marquerPoint(index, e)
                   }}
                 />
+                {(photo.qualite?.floue || photo.qualite?.sombre) && (
+                  <span
+                    className="photo-thumb-warning"
+                    title={
+                      photo.qualite?.floue && photo.qualite?.sombre
+                        ? 'Photo floue et sombre — envisagez de la remplacer'
+                        : photo.qualite?.floue
+                          ? 'Photo floue — envisagez de la remplacer'
+                          : 'Photo sombre — envisagez de la remplacer'
+                    }
+                  >
+                    ⚠
+                  </span>
+                )}
                 {photo.point && (
                   <button
                     type="button"
@@ -205,6 +223,13 @@ function UploadPage() {
 
       {photos.length > 0 && (
         <p className="point-hint">Touchez une photo pour indiquer l'emplacement exact du problème (facultatif)</p>
+      )}
+
+      {photosAvecSouci.length > 0 && (
+        <p className="quality-warning">
+          ⚠ {photosAvecSouci.length > 1 ? `${photosAvecSouci.length} photos semblent` : '1 photo semble'} floue(s)
+          ou sombre(s) — vous pouvez la remplacer pour un meilleur diagnostic.
+        </p>
       )}
 
       {photos.length > 0 && (
