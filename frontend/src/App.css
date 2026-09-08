@@ -108,6 +108,14 @@
 
   .app-nav-tools {
     padding-left: var(--space-2);
+    gap: var(--space-2);
+  }
+
+  /* outil interne (stats de demo) : peu utile sur mobile, retire pour laisser la place
+     aux outils client (grille tarifaire, historique, parametres...) qui se sont multiplies
+     avec le second module. */
+  .app-nav-tool-internal {
+    display: none;
   }
 }
 
@@ -263,7 +271,12 @@
 }
 
 .table-scroll table {
-  width: 100%;
+  /* min-width (pas width fixe) : la table s'etire pour remplir le conteneur quand son
+     contenu est etroit, mais peut le depasser (et donc defiler via .table-scroll) quand
+     le contenu reel est plus large - un width:100% fixe ecrasait les colonnes au lieu de
+     laisser defiler (nombres tronques, champs de saisie reduits a rien sur mobile). */
+  min-width: 100%;
+  width: max-content;
 }
 
 .table-scroll-hint {

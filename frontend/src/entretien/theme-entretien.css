@@ -1,0 +1,19 @@
+/* Identite visuelle "bio / espaces verts" du module Entretien : reprend le vert deja
+   utilise pour la carte Entretien de la page d'accueil, applique a tous les ecrans du
+   module via une redefinition des variables de couleur d'accent (portee par cette classe
+   sur <main>). Aucun composant partage (boutons, badges, dropzone...) n'a besoin d'etre
+   modifie : ils lisent deja ces memes variables CSS. */
+.theme-entretien {
+  --color-accent-copper: #1f8a72;
+  --color-accent-copper-hover: #176c59;
+  --color-accent-copper-soft: #e4f3ee;
+  --color-accent-amber: #8bc98a;
+  --gradient-brand: linear-gradient(120deg, #1f8a72, #8bc98a);
+  --shadow-md: 0 10px 24px -8px rgba(31, 138, 114, 0.28);
+  --effect-scan-gradient: linear-gradient(
+    180deg,
+    rgba(139, 201, 138, 0) 0%,
+    rgba(139, 201, 138, 0.25) 50%,
+    rgba(139, 201, 138, 0) 100%
+  );
+}
