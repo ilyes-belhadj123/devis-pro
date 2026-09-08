@@ -2,6 +2,12 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import Alert from '../../components/Alert'
 import { accepterDevisPublic, getDevisPublic, type DevisValidationApi } from '../api'
+import Confetti from '../components/Confetti'
+import { useCompteur } from '../../utils/useCompteur'
+
+function MontantAnime({ valeur }: { valeur: number }) {
+  return <>{useCompteur(valeur).toFixed(2)} €</>
+}
 
 function EntretienDevisClientPage() {
   const { id } = useParams<{ id: string }>()
@@ -12,6 +18,7 @@ function EntretienDevisClientPage() {
   const [niveauChoisi, setNiveauChoisi] = useState('standard')
   const [accepteCoche, setAccepteCoche] = useState(false)
   const [isAcceptationEnCours, setIsAcceptationEnCours] = useState(false)
+  const [montrerConfetti, setMontrerConfetti] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -31,6 +38,8 @@ function EntretienDevisClientPage() {
     try {
       const resultat = await accepterDevisPublic(devis.id, niveauChoisi)
       setDevis(resultat)
+      setMontrerConfetti(true)
+      setTimeout(() => setMontrerConfetti(false), 3500)
     } catch (err) {
       setErreur(err instanceof Error ? err.message : "Impossible d'accepter ce devis pour le moment.")
     } finally {
@@ -60,12 +69,13 @@ function EntretienDevisClientPage() {
     const formuleAcceptee = devis.formules.find((f) => f.niveau === devis.formule_choisie)
     return (
       <section className="page page-wide">
+        {montrerConfetti && <Confetti />}
         <span className="page-eyebrow">Devis SnapDevis Entretien</span>
         <h1>Merci, votre devis est confirmé !</h1>
         <Alert type="success">
           Vous avez accepté la formule « {formuleAcceptee?.label ?? devis.formule_choisie} » —{' '}
-          {formuleAcceptee?.total.toFixed(2)} €. L'artisan a été notifié et vous recontactera pour planifier
-          l'intervention.
+          {formuleAcceptee ? <MontantAnime valeur={formuleAcceptee.total} /> : `${devis.formule_choisie}`}. L'artisan
+          a été notifié et vous recontactera pour planifier l'intervention.
         </Alert>
       </section>
     )
@@ -90,7 +100,7 @@ function EntretienDevisClientPage() {
           >
             <span className="stat-label">{formule.label}</span>
             <span className={`stat-value ${formule.niveau === niveauChoisi ? 'stat-value-accent' : ''}`}>
-              {formule.total.toFixed(2)} €
+              <MontantAnime valeur={formule.total} />
             </span>
             <span className="page-lead" style={{ fontSize: '0.78125rem' }}>
               {formule.description}

@@ -15,8 +15,16 @@
 }
 
 .landing-card:hover {
-  transform: translateY(-3px);
+  transform: translateY(-5px) scale(1.01);
   box-shadow: var(--shadow-lg);
+}
+
+.landing-card .icon-badge {
+  transition: transform 0.25s ease;
+}
+
+.landing-card:hover .icon-badge {
+  transform: scale(1.08) rotate(-4deg);
 }
 
 .landing-card-badge {
@@ -100,6 +108,10 @@
   color: rgba(255, 255, 255, 0.72);
 }
 
+.landing-card-chantier:hover {
+  box-shadow: 0 22px 55px -15px rgba(255, 178, 56, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
 /* Entretien — bio / espaces verts : vert naturel, feuillage en filigrane */
 .landing-card-bio {
   background: radial-gradient(120% 140% at 100% 0%, rgba(31, 138, 114, 0.16), transparent 60%), var(--color-bg-surface);
@@ -115,6 +127,10 @@
   color: var(--color-accent-tech);
 }
 
+.landing-card-bio:hover {
+  box-shadow: 0 22px 55px -15px rgba(31, 138, 114, 0.4);
+}
+
 .landing-card-bio-leaf {
   position: absolute;
   right: -14px;
@@ -124,4 +140,10 @@
   opacity: 0.1;
   transform: rotate(-12deg);
   pointer-events: none;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.landing-card-bio:hover .landing-card-bio-leaf {
+  transform: rotate(-4deg) scale(1.06);
+  opacity: 0.16;
 }

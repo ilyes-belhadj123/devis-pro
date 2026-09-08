@@ -11,6 +11,11 @@ import {
   type DiagnosticEntretienApi,
 } from '../api'
 import { mockDevisEntretien, mockDiagnosticEntretien } from '../mocks/mockData'
+import { useCompteur } from '../../utils/useCompteur'
+
+function MontantAnime({ valeur }: { valeur: number }) {
+  return <>{useCompteur(valeur).toFixed(2)} €</>
+}
 
 const EMOJI_CATEGORIE: Record<string, string> = {
   tonte: '🌱',
@@ -203,7 +208,7 @@ function EntretienDevisPage() {
           >
             <span className="stat-label">{f.label}</span>
             <span className={`stat-value ${f.niveau === formuleActive ? 'stat-value-accent' : ''}`}>
-              {f.total.toFixed(2)} €
+              <MontantAnime valeur={f.total} />
             </span>
             <span className="page-lead" style={{ fontSize: '0.78125rem' }}>
               {f.description}
@@ -270,7 +275,9 @@ function EntretienDevisPage() {
 
               <div className="quote-total">
                 <span className="tt-label">Total {mode === 'ponctuel' ? 'ponctuel' : 'par intervention'}</span>
-                <span className="tt-val text-gradient">{formule.total.toFixed(2)} €</span>
+                <span className="tt-val text-gradient">
+                  <MontantAnime valeur={formule.total} />
+                </span>
               </div>
             </div>
           </div>
@@ -332,7 +339,9 @@ function EntretienDevisPage() {
               <div className="stat-row" style={{ marginTop: 'var(--space-4)' }}>
                 <div className="stat-tile">
                   <span className="stat-label">Prix par passage (contrat)</span>
-                  <span className="stat-value">{contrat.prix_intervention_contrat.toFixed(2)} €</span>
+                  <span className="stat-value">
+                    <MontantAnime valeur={contrat.prix_intervention_contrat} />
+                  </span>
                   <span className="page-lead" style={{ fontSize: '0.75rem' }}>
                     au lieu de {contrat.prix_intervention_ponctuel.toFixed(2)} € en ponctuel (-
                     {contrat.economie_pourcentage}%)
@@ -340,14 +349,18 @@ function EntretienDevisPage() {
                 </div>
                 <div className="stat-tile stat-tile-accent">
                   <span className="stat-label">Prix mensuel</span>
-                  <span className="stat-value stat-value-accent">{contrat.prix_mensuel.toFixed(2)} €</span>
+                  <span className="stat-value stat-value-accent">
+                    <MontantAnime valeur={contrat.prix_mensuel} />
+                  </span>
                   <span className="page-lead" style={{ fontSize: '0.75rem' }}>
                     {contrat.interventions_an} passages/an
                   </span>
                 </div>
                 <div className="stat-tile">
                   <span className="stat-label">Prix annuel</span>
-                  <span className="stat-value">{contrat.prix_annuel.toFixed(2)} €</span>
+                  <span className="stat-value">
+                    <MontantAnime valeur={contrat.prix_annuel} />
+                  </span>
                   <span className="page-lead" style={{ fontSize: '0.75rem' }}>
                     engagement {contrat.duree_mois} mois
                   </span>
