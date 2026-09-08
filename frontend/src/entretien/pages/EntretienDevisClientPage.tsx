@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import Alert from '../../components/Alert'
 import { accepterDevisPublic, getDevisPublic, type DevisValidationApi } from '../api'
 import Confetti from '../components/Confetti'
+import CheckmarkAnime from '../components/CheckmarkAnime'
 import { useCompteur } from '../../utils/useCompteur'
 
 function MontantAnime({ valeur }: { valeur: number }) {
@@ -71,7 +72,8 @@ function EntretienDevisClientPage() {
       <section className="page page-wide">
         {montrerConfetti && <Confetti />}
         <span className="page-eyebrow">Devis SnapDevis Entretien</span>
-        <h1>Merci, votre devis est confirmé !</h1>
+        <CheckmarkAnime />
+        <h1 style={{ textAlign: 'center' }}>Merci, votre devis est confirmé !</h1>
         <Alert type="success">
           Vous avez accepté la formule « {formuleAcceptee?.label ?? devis.formule_choisie} » —{' '}
           {formuleAcceptee ? <MontantAnime valeur={formuleAcceptee.total} /> : `${devis.formule_choisie}`}. L'artisan

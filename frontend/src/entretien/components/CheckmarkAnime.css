@@ -1,0 +1,28 @@
+.checkmark-anime {
+  display: block;
+  margin: 0 auto var(--space-4);
+}
+
+.checkmark-anime-circle {
+  stroke-dasharray: 208;
+  stroke-dashoffset: 208;
+  animation: checkmark-circle 0.6s ease forwards;
+}
+
+.checkmark-anime-check {
+  stroke-dasharray: 42;
+  stroke-dashoffset: 42;
+  animation: checkmark-check 0.35s 0.55s ease forwards;
+}
+
+@keyframes checkmark-circle {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes checkmark-check {
+  to {
+    stroke-dashoffset: 0;
+  }
+}

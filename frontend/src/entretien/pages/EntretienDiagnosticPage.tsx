@@ -3,6 +3,28 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import Alert from '../../components/Alert'
 import { affinerDiagnosticEntretien, type DiagnosticEntretienApi } from '../api'
 import { mockDiagnosticEntretien } from '../mocks/mockData'
+import { useCompteur } from '../../utils/useCompteur'
+
+function AnneauConfiance({ confiance }: { confiance: number }) {
+  const pourcentageCible = Math.round(confiance * 100)
+  const pourcentageAnime = Math.round(useCompteur(pourcentageCible, 900))
+  return (
+    <div className="ring-badge">
+      <div
+        className="ring"
+        style={{
+          background: `conic-gradient(var(--color-accent-tech) 0% ${pourcentageAnime}%, rgba(255,255,255,0.18) ${pourcentageAnime}% 100%)`,
+        }}
+      >
+        <span>{pourcentageAnime}%</span>
+      </div>
+      <div className="ring-badge-text">
+        Confiance
+        <b>{confiance >= 0.75 ? 'Diagnostic fiable' : 'À préciser'}</b>
+      </div>
+    </div>
+  )
+}
 
 function EntretienDiagnosticPage() {
   const navigate = useNavigate()
@@ -69,7 +91,6 @@ function EntretienDiagnosticPage() {
     navigate('/entretien/devis', { state: { diagnostic: diagnosticAvecCorrection } })
   }
 
-  const pourcentageConfiance = Math.round(diagnostic.confiance * 100)
 
   return (
     <section className="page page-wide">
@@ -92,24 +113,7 @@ function EntretienDiagnosticPage() {
               </div>
             )}
 
-            {isScanning ? (
-              <div className="scan-line" />
-            ) : (
-              <div className="ring-badge">
-                <div
-                  className="ring"
-                  style={{
-                    background: `conic-gradient(var(--color-accent-tech) 0% ${pourcentageConfiance}%, rgba(255,255,255,0.18) ${pourcentageConfiance}% 100%)`,
-                  }}
-                >
-                  <span>{pourcentageConfiance}%</span>
-                </div>
-                <div className="ring-badge-text">
-                  Confiance
-                  <b>{diagnostic.confiance >= 0.75 ? 'Diagnostic fiable' : 'À préciser'}</b>
-                </div>
-              </div>
-            )}
+            {isScanning ? <div className="scan-line" /> : <AnneauConfiance confiance={diagnostic.confiance} />}
           </div>
 
           {photoUrls.length > 1 && (

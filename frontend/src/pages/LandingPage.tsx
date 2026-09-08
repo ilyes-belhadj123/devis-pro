@@ -6,18 +6,20 @@ function LandingPage() {
 
   return (
     <section className="page page-wide">
-      <span className="page-eyebrow">
-        <span className="page-eyebrow-ping" />
-        SnapDevis
-      </span>
+      <div className="landing-intro">
+        <span className="page-eyebrow">
+          <span className="page-eyebrow-ping" />
+          SnapDevis
+        </span>
 
-      <h1>
-        Une photo.
-        <br />
-        <span className="text-gradient">Un devis chiffré.</span>
-      </h1>
+        <h1>
+          Une photo.
+          <br />
+          <span className="text-gradient">Un devis chiffré.</span>
+        </h1>
 
-      <p className="page-lead">Choisissez votre activité pour démarrer.</p>
+        <p className="page-lead">Choisissez votre activité pour démarrer.</p>
+      </div>
 
       <div className="landing-cards">
         <button type="button" className="card landing-card landing-card-chantier" onClick={() => navigate('/bricolage')}>
