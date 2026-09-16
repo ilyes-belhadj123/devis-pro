@@ -1,4 +1,5 @@
 import hashlib
+import re
 
 import httpx
 
@@ -64,6 +65,73 @@ def comparer_fournisseurs(reference: str, prix_actuel: float) -> list[dict]:
 
     return fournisseurs
 
+
+# Entreprises generiques et fictives (aucune enseigne/artisan reel) proposees en alternative
+# a l'achat du materiel soi-meme - meme principe deterministe que le comparateur de
+# fournisseurs, aucune vraie donnee ni scraping.
+NOMS_ENTREPRISES_REPARATION = [
+    "Rénov Services Plus",
+    "Atelier Multi-Travaux",
+    "Bâti Confort Pro",
+    "Artisans Réunis",
+    "Solution Habitat Services",
+]
+
+DELAIS_INTERVENTION = ["Disponible sous 2 jours", "Disponible sous 4 jours", "Disponible sous 1 semaine"]
+
+_TABLE_ACCENTS = str.maketrans("éèêëàâäôöûüîïç'", "eeeeaaaoouuiic ")
+
+
+def _slug_entreprise(nom: str) -> str:
+    """Adresse mail fictive deduite du nom de l'entreprise (elle aussi fictive) - permet
+    un lien mailto: reellement fonctionnel (le client mail de l'utilisateur s'ouvre pour
+    de vrai) sans pretendre qu'une vraie entreprise existe derriere."""
+    minuscule = nom.lower().translate(_TABLE_ACCENTS)
+    return re.sub(r"[^a-z0-9]+", "", minuscule)
+
+
+def proposer_entreprises_reparation(categorie: str) -> list[dict]:
+    """Simule 3 entreprises fictives pouvant realiser les travaux, avec note/avis,
+    distance et delai deterministes (bases sur un hash de la categorie) plutot
+    qu'aleatoires - la meme categorie renvoie toujours les memes propositions."""
+    hachage = int(hashlib.sha256(categorie.encode()).hexdigest(), 16)
+
+    noms_restants = list(NOMS_ENTREPRISES_REPARATION)
+    noms_choisis = []
+    for i in range(3):
+        index = (hachage >> (i * 5)) % len(noms_restants)
+        noms_choisis.append(noms_restants.pop(index))
+
+    entreprises = []
+    for i, nom in enumerate(noms_choisis):
+        octet_note = (hachage >> (20 + i * 6)) & 0x3F
+        note = round(3.8 + (octet_note / 63) * 1.1, 1)  # entre 3.8 et 4.9
+
+        octet_avis = (hachage >> (38 + i * 10)) & 0x3FF
+        nombre_avis = 15 + (octet_avis % 180)  # entre 15 et 195
+
+        octet_distance = (hachage >> (58 + i * 7)) & 0x7F
+        distance_km = round(1.0 + (octet_distance / 127) * 14, 1)  # entre 1 et 15 km
+
+        octet_delai = (hachage >> (70 + i * 3)) & 0x03
+        delai = DELAIS_INTERVENTION[octet_delai % len(DELAIS_INTERVENTION)]
+
+        entreprises.append(
+            {
+                "nom": nom,
+                "specialite": categorie,
+                "note": note,
+                "nombre_avis": nombre_avis,
+                "distance_km": distance_km,
+                "delai_intervention": delai,
+                "email": f"contact@{_slug_entreprise(nom)}.fr",
+            }
+        )
+
+    entreprises.sort(key=lambda e: e["distance_km"])
+    return entreprises
+
+
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 MODELE = "anthropic/claude-sonnet-5"
 
@@ -124,3 +192,45 @@ async def trouver_alternative_moins_chere(reference_actuelle: str, categorie: st
         "prix": choix["prix"],
         "unite": choix["unite"],
     }
+
+
+PROMPT_SYSTEME_ASSISTANT = (
+    "Tu es l'assistant SnapDevis, integre a l'ecran de devis d'un client. Tu reponds UNIQUEMENT a des questions "
+    "sur LE DEVIS PRECIS fourni ci-dessous (ses lignes, quantites, prix, categories, total) - jamais de conseils "
+    "bricolage generaux sans rapport avec ce devis, jamais de prix ou de produit invente qui n'est pas dans la "
+    "liste. Si la question sort de ce cadre (un autre projet, une question sans rapport avec ce devis), dis "
+    "poliment que tu ne peux repondre qu'aux questions sur ce devis precis. Reponds en francais, de maniere "
+    "concise et utile (2 a 4 phrases, sauf si le client demande explicitement plus de detail).\n\n"
+    "DEVIS ACTUEL :\n{devis}"
+)
+
+
+def _formater_devis_pour_prompt(lignes: list[dict], total: float) -> str:
+    lignes_texte = "\n".join(
+        f"- {l['nom']} : {l['quantite']} {l['unite']} x {l['prix_unitaire']:.2f} € "
+        f"= {l['quantite'] * l['prix_unitaire']:.2f} € ({l['categorie']})"
+        for l in lignes
+    )
+    return f"{lignes_texte}\nTotal : {total:.2f} €"
+
+
+async def repondre_assistant(lignes: list[dict], total: float, messages: list[dict]) -> str | None:
+    api_key = await get_openrouter_api_key()
+    if not api_key:
+        return None
+
+    prompt_systeme = PROMPT_SYSTEME_ASSISTANT.format(devis=_formater_devis_pour_prompt(lignes, total))
+    messages_completes = [{"role": "system", "content": prompt_systeme}, *messages]
+
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as http_client:
+            response = await http_client.post(
+                OPENROUTER_URL,
+                headers={"Authorization": f"Bearer {api_key}"},
+                json={"model": MODELE, "messages": messages_completes},
+            )
+            response.raise_for_status()
+            data = response.json()
+        return data["choices"][0]["message"]["content"]
+    except (httpx.HTTPError, KeyError, IndexError):
+        return None

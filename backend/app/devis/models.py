@@ -77,6 +77,49 @@ class ComparateurResultat(BaseModel):
     fournisseurs: list[FournisseurComparateur]
 
 
+class EntrepriseReparationInput(BaseModel):
+    categorie: str
+
+
+class EntrepriseReparation(BaseModel):
+    nom: str
+    specialite: str
+    note: float
+    nombre_avis: int
+    distance_km: float
+    delai_intervention: str
+    email: str
+
+
+class EntreprisesReparationResultat(BaseModel):
+    categorie: str
+    entreprises: list[EntrepriseReparation]
+
+
+class MessageAssistant(BaseModel):
+    role: str
+    content: str
+
+
+class LigneAssistantInput(BaseModel):
+    nom: str
+    categorie: str
+    unite: str
+    prix_unitaire: float = Field(ge=0)
+    quantite: float = Field(ge=0)
+
+
+class AssistantInput(BaseModel):
+    lignes: list[LigneAssistantInput]
+    total: float
+    messages: list[MessageAssistant]
+
+
+class AssistantResultat(BaseModel):
+    reponse: str
+    degrade: bool = False
+
+
 class RepartitionProbleme(BaseModel):
     probleme: str
     nombre: int

@@ -1,7 +1,16 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import { comparerFournisseurs, exporterDevisPdf, trouverAlternative, type DevisApi, type FournisseurComparateurApi } from '../api'
+import {
+  comparerFournisseurs,
+  exporterDevisPdf,
+  proposerEntreprisesReparation,
+  trouverAlternative,
+  type DevisApi,
+  type EntrepriseReparationApi,
+  type FournisseurComparateurApi,
+} from '../api'
 import Alert from '../components/Alert'
+import ChatbotDevis from '../components/ChatbotDevis'
 import LigneIcone from '../components/LigneIcone'
 import { mockDevis, type LigneDevis } from '../mocks/mockData'
 import './DevisPage.css'
@@ -33,6 +42,30 @@ function DevisPage() {
   const [comparateurs, setComparateurs] = useState<Record<string, FournisseurComparateurApi[]>>({})
   const [comparateurEnCours, setComparateurEnCours] = useState<string | null>(null)
   const [erreurComparateur, setErreurComparateur] = useState<string | null>(null)
+  const [entreprises, setEntreprises] = useState<EntrepriseReparationApi[]>([])
+  const [isChargementEntreprises, setIsChargementEntreprises] = useState(false)
+  const [souhaiteProfessionnel, setSouhaiteProfessionnel] = useState<boolean | null>(null)
+
+  const categoriePrincipale = lignes[0]?.categorie
+
+  useEffect(() => {
+    if (!categoriePrincipale || souhaiteProfessionnel !== true) return
+    let annule = false
+    setIsChargementEntreprises(true)
+    proposerEntreprisesReparation(categoriePrincipale)
+      .then((resultat) => {
+        if (!annule) setEntreprises(resultat.entreprises)
+      })
+      .catch(() => {
+        if (!annule) setEntreprises([])
+      })
+      .finally(() => {
+        if (!annule) setIsChargementEntreprises(false)
+      })
+    return () => {
+      annule = true
+    }
+  }, [categoriePrincipale, souhaiteProfessionnel])
 
   const total = useMemo(
     () => lignes.reduce((somme, ligne) => somme + ligne.quantite * ligne.prixUnitaire, 0),
@@ -252,6 +285,68 @@ function DevisPage() {
           </div>
         </div>
       </div>
+
+      <div className="card">
+        <h2>Besoin d'un professionnel pour réaliser les travaux ?</h2>
+        <p className="page-lead" style={{ maxWidth: 'none' }}>
+          Si vous préférez ne pas réaliser les travaux vous-même, on peut vous suggérer des entreprises proches de
+          chez vous.
+        </p>
+        <div className="btn-row" style={{ marginTop: 'var(--space-4)' }}>
+          <button
+            type="button"
+            className={`btn ${souhaiteProfessionnel === true ? 'btn-primary' : 'btn-secondary'}`}
+            onClick={() => setSouhaiteProfessionnel(true)}
+          >
+            Oui, montrez-moi des professionnels
+          </button>
+          <button
+            type="button"
+            className={`btn ${souhaiteProfessionnel === false ? 'btn-primary' : 'btn-secondary'}`}
+            onClick={() => setSouhaiteProfessionnel(false)}
+          >
+            Non merci
+          </button>
+        </div>
+
+        {souhaiteProfessionnel === true &&
+          (isChargementEntreprises ? (
+            <p className="page-lead" style={{ marginTop: 'var(--space-4)' }}>
+              Recherche d'entreprises…
+            </p>
+          ) : (
+            <div className="stat-row" style={{ marginTop: 'var(--space-4)' }}>
+              {entreprises.map((entreprise) => {
+                const sujet = encodeURIComponent(`Demande de devis — ${entreprise.specialite}`)
+                const corps = encodeURIComponent(
+                  `Bonjour,\n\nJe vous contacte suite à un diagnostic réalisé avec SnapDevis pour une intervention de type « ${entreprise.specialite} » (devis estimé à ${total.toFixed(2)} €).\n\nSeriez-vous disponible pour réaliser cette intervention ? Pourriez-vous me proposer un rendez-vous ?\n\nMerci d'avance,`,
+                )
+                const lienMailto = `mailto:${entreprise.email}?subject=${sujet}&body=${corps}`
+                return (
+                  <a
+                    className="stat-tile"
+                    key={entreprise.nom}
+                    href={lienMailto}
+                    style={{ textDecoration: 'none', color: 'inherit', display: 'flex' }}
+                  >
+                    <span className="stat-label">{entreprise.nom}</span>
+                    <span className="stat-value" style={{ fontSize: '1.125rem' }}>
+                      ★ {entreprise.note.toFixed(1)} ({entreprise.nombre_avis} avis)
+                    </span>
+                    <span className="page-lead" style={{ fontSize: '0.78125rem' }}>
+                      {entreprise.specialite} · à {entreprise.distance_km.toFixed(1)} km · {entreprise.delai_intervention}
+                    </span>
+                    <span className="li-action" style={{ marginTop: 'var(--space-2)' }}>
+                      ✉ Contacter par email
+                    </span>
+                  </a>
+                )
+              })}
+            </div>
+          ))}
+      </div>
+
+      <ChatbotDevis lignes={lignes} total={total} />
     </section>
   )
 }

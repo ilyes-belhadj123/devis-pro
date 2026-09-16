@@ -10,11 +10,16 @@ from app.diagnostic.session_store import recuperer_session
 from app.devis.models import (
     AlternativeInput,
     AlternativeResultat,
+    AssistantInput,
+    AssistantResultat,
     ComparateurInput,
     ComparateurResultat,
     DevisGenere,
     DevisPdfInput,
     DiagnosticInput,
+    EntrepriseReparation,
+    EntrepriseReparationInput,
+    EntreprisesReparationResultat,
     FournisseurComparateur,
     GroupeCategorie,
     HistoriqueDetail,
@@ -24,7 +29,12 @@ from app.devis.models import (
     StatistiquesDevis,
 )
 from app.devis.pdf import construire_pdf_devis
-from app.devis.service import comparer_fournisseurs, trouver_alternative_moins_chere
+from app.devis.service import (
+    comparer_fournisseurs,
+    proposer_entreprises_reparation,
+    repondre_assistant,
+    trouver_alternative_moins_chere,
+)
 
 router = APIRouter(prefix="/devis", tags=["devis"])
 
@@ -134,6 +144,31 @@ async def comparer_prix(payload: ComparateurInput) -> ComparateurResultat:
         nom_produit=payload.nom,
         fournisseurs=[FournisseurComparateur(**f) for f in fournisseurs],
     )
+
+
+@router.post("/entreprises-reparation", response_model=EntreprisesReparationResultat)
+async def proposer_entreprises(payload: EntrepriseReparationInput) -> EntreprisesReparationResultat:
+    entreprises = proposer_entreprises_reparation(payload.categorie)
+    return EntreprisesReparationResultat(
+        categorie=payload.categorie,
+        entreprises=[EntrepriseReparation(**e) for e in entreprises],
+    )
+
+
+@router.post("/assistant", response_model=AssistantResultat)
+async def assistant_devis(payload: AssistantInput) -> AssistantResultat:
+    lignes = [ligne.model_dump() for ligne in payload.lignes]
+    messages = [message.model_dump() for message in payload.messages]
+    reponse = await repondre_assistant(lignes, payload.total, messages)
+    if reponse is None:
+        return AssistantResultat(
+            reponse=(
+                "L'assistant IA n'est pas disponible pour le moment "
+                "(clé OpenRouter non configurée dans Paramètres)."
+            ),
+            degrade=True,
+        )
+    return AssistantResultat(reponse=reponse, degrade=False)
 
 
 @router.get("/statistiques", response_model=StatistiquesDevis)

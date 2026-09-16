@@ -218,6 +218,67 @@ export async function comparerFournisseurs(
   return response.json()
 }
 
+export type EntrepriseReparationApi = {
+  nom: string
+  specialite: string
+  note: number
+  nombre_avis: number
+  distance_km: number
+  delai_intervention: string
+  email: string
+}
+
+export type EntreprisesReparationApi = {
+  categorie: string
+  entreprises: EntrepriseReparationApi[]
+}
+
+export async function proposerEntreprisesReparation(categorie: string): Promise<EntreprisesReparationApi> {
+  const response = await fetch(`${API_URL}/devis/entreprises-reparation`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ categorie }),
+  })
+
+  if (!response.ok) {
+    await lancerErreur(response, `Erreur ${response.status} lors de la recherche d'entreprises`)
+  }
+
+  return response.json()
+}
+
+export type MessageAssistantApi = { role: 'user' | 'assistant'; content: string }
+
+export type AssistantResultatApi = { reponse: string; degrade: boolean }
+
+export async function demanderAssistant(
+  lignes: LigneDevisPourPdf[],
+  total: number,
+  messages: MessageAssistantApi[],
+): Promise<AssistantResultatApi> {
+  const response = await fetch(`${API_URL}/devis/assistant`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      lignes: lignes.map((ligne) => ({
+        nom: ligne.nom,
+        categorie: ligne.categorie,
+        unite: ligne.unite,
+        prix_unitaire: ligne.prixUnitaire,
+        quantite: ligne.quantite,
+      })),
+      total,
+      messages,
+    }),
+  })
+
+  if (!response.ok) {
+    await lancerErreur(response, `Erreur ${response.status} lors de la réponse de l'assistant`)
+  }
+
+  return response.json()
+}
+
 export type RepartitionProblemeApi = {
   probleme: string
   nombre: number
