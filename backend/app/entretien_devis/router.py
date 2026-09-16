@@ -2,15 +2,18 @@ from fastapi import APIRouter, HTTPException
 
 from app.core.database import database
 from app.entretien_devis.models import (
+    ComparateurInput,
+    ComparateurResultat,
     ContratRecurrentGenere,
     ContratRecurrentInput,
     DevisEntretienGenere,
     FormuleDevis,
+    FournisseurComparateur,
     GenererDevisInput,
     LigneDevisEntretien,
 )
 from app.entretien_devis.apprentissage import appliquer_ponderation
-from app.entretien_devis.service import formules_par_defaut, generer_formules
+from app.entretien_devis.service import comparer_fournisseurs, formules_par_defaut, generer_formules
 
 router = APIRouter(prefix="/entretien/devis", tags=["entretien-devis"])
 
@@ -101,4 +104,13 @@ async def generer_contrat_recurrent(payload: ContratRecurrentInput) -> ContratRe
         prix_annuel=prix_annuel,
         prix_mensuel=prix_mensuel,
         economie_pourcentage=round((1 - TAUX_DEGRESSIVITE) * 100, 1),
+    )
+
+
+@router.post("/comparateur", response_model=ComparateurResultat)
+async def comparer_prix(payload: ComparateurInput) -> ComparateurResultat:
+    fournisseurs = comparer_fournisseurs(payload.designation, payload.prix_actuel)
+    return ComparateurResultat(
+        designation=payload.designation,
+        fournisseurs=[FournisseurComparateur(**f) for f in fournisseurs],
     )

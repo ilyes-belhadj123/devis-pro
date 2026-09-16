@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import Alert from '../../components/Alert'
+import ZonesDetectees from '../../components/ZonesDetectees'
 import { affinerDiagnosticEntretien, type DiagnosticEntretienApi } from '../api'
 import { mockDiagnosticEntretien } from '../mocks/mockData'
 import { useCompteur } from '../../utils/useCompteur'
@@ -113,7 +114,14 @@ function EntretienDiagnosticPage() {
               </div>
             )}
 
-            {isScanning ? <div className="scan-line" /> : <AnneauConfiance confiance={diagnostic.confiance} />}
+            {isScanning ? (
+              <div className="scan-line" />
+            ) : (
+              <>
+                <ZonesDetectees zones={diagnostic.zones_detectees ?? []} />
+                <AnneauConfiance confiance={diagnostic.confiance} />
+              </>
+            )}
           </div>
 
           {photoUrls.length > 1 && (

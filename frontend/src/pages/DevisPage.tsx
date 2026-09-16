@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import { exporterDevisPdf, trouverAlternative, type DevisApi } from '../api'
+import { comparerFournisseurs, exporterDevisPdf, trouverAlternative, type DevisApi, type FournisseurComparateurApi } from '../api'
 import Alert from '../components/Alert'
 import LigneIcone from '../components/LigneIcone'
 import { mockDevis, type LigneDevis } from '../mocks/mockData'
@@ -29,6 +29,10 @@ function DevisPage() {
   const [erreurExport, setErreurExport] = useState<string | null>(null)
   const [ligneEnRecherche, setLigneEnRecherche] = useState<string | null>(null)
   const [messageAlternative, setMessageAlternative] = useState<string | null>(null)
+  const [comparateurOuvert, setComparateurOuvert] = useState<string | null>(null)
+  const [comparateurs, setComparateurs] = useState<Record<string, FournisseurComparateurApi[]>>({})
+  const [comparateurEnCours, setComparateurEnCours] = useState<string | null>(null)
+  const [erreurComparateur, setErreurComparateur] = useState<string | null>(null)
 
   const total = useMemo(
     () => lignes.reduce((somme, ligne) => somme + ligne.quantite * ligne.prixUnitaire, 0),
@@ -94,6 +98,31 @@ function DevisPage() {
     }
   }
 
+  const basculerComparateur = async (ligne: LigneDevis) => {
+    if (comparateurOuvert === ligne.id) {
+      setComparateurOuvert(null)
+      return
+    }
+    setComparateurOuvert(ligne.id)
+    if (comparateurs[ligne.id]) return
+
+    setComparateurEnCours(ligne.id)
+    setErreurComparateur(null)
+    try {
+      const resultat = await comparerFournisseurs(ligne.id, ligne.nom, ligne.prixUnitaire)
+      setComparateurs((precedent) => ({ ...precedent, [ligne.id]: resultat.fournisseurs }))
+    } catch (err) {
+      setErreurComparateur(err instanceof Error ? err.message : 'Impossible de comparer les prix pour le moment.')
+    } finally {
+      setComparateurEnCours(null)
+    }
+  }
+
+  const appliquerPrixFournisseur = (ligneId: string, prix: number) => {
+    setLignes((precedent) => precedent.map((ligne) => (ligne.id === ligneId ? { ...ligne, prixUnitaire: prix } : ligne)))
+    setComparateurOuvert(null)
+  }
+
   return (
     <section className="page">
       <span className="page-eyebrow">
@@ -129,39 +158,76 @@ function DevisPage() {
               const surTeal = index % 2 === 0
               const couleur = surTeal ? 'var(--color-accent-tech)' : 'var(--color-accent-copper)'
               return (
-                <div className="li" key={ligne.id}>
-                  <div className="li-icon" style={{ background: surTeal ? 'var(--color-accent-tech-soft)' : 'var(--color-accent-copper-soft)' }}>
-                    <LigneIcone categorie={ligne.categorie} couleur={couleur} />
-                  </div>
-                  <div className="li-mid">
-                    <p className="li-name">{ligne.nom}</p>
-                    <p className="li-cat">{ligne.categorie}</p>
-                    <div className="li-actions">
-                      <button
-                        type="button"
-                        className="li-action"
-                        disabled={ligneEnRecherche === ligne.id}
-                        onClick={() => proposerAlternative(ligne)}
-                      >
-                        {ligneEnRecherche === ligne.id ? 'Recherche…' : 'Alternative moins chère'}
-                      </button>
-                      <button type="button" className="li-action li-action-danger" onClick={() => supprimerLigne(ligne.id)}>
-                        Supprimer
-                      </button>
+                <div key={ligne.id}>
+                  <div className="li">
+                    <div className="li-icon" style={{ background: surTeal ? 'var(--color-accent-tech-soft)' : 'var(--color-accent-copper-soft)' }}>
+                      <LigneIcone categorie={ligne.categorie} couleur={couleur} />
+                    </div>
+                    <div className="li-mid">
+                      <p className="li-name">{ligne.nom}</p>
+                      <p className="li-cat">{ligne.categorie}</p>
+                      <div className="li-actions">
+                        <button
+                          type="button"
+                          className="li-action"
+                          disabled={ligneEnRecherche === ligne.id}
+                          onClick={() => proposerAlternative(ligne)}
+                        >
+                          {ligneEnRecherche === ligne.id ? 'Recherche…' : 'Alternative moins chère'}
+                        </button>
+                        <button type="button" className="li-action" onClick={() => basculerComparateur(ligne)}>
+                          {comparateurOuvert === ligne.id ? 'Fermer le comparatif' : 'Comparer les prix'}
+                        </button>
+                        <button type="button" className="li-action li-action-danger" onClick={() => supprimerLigne(ligne.id)}>
+                          Supprimer
+                        </button>
+                      </div>
+                    </div>
+                    <div className="li-right">
+                      <div className="li-qty">
+                        <button type="button" aria-label="Diminuer la quantité" onClick={() => modifierQuantite(ligne.id, ligne.quantite - 1)}>
+                          −
+                        </button>
+                        <span className="text-mono">{ligne.quantite}</span>
+                        <button type="button" aria-label="Augmenter la quantité" onClick={() => modifierQuantite(ligne.id, ligne.quantite + 1)}>
+                          +
+                        </button>
+                      </div>
+                      <div className="li-price text-mono">{(ligne.quantite * ligne.prixUnitaire).toFixed(2)} €</div>
                     </div>
                   </div>
-                  <div className="li-right">
-                    <div className="li-qty">
-                      <button type="button" aria-label="Diminuer la quantité" onClick={() => modifierQuantite(ligne.id, ligne.quantite - 1)}>
-                        −
-                      </button>
-                      <span className="text-mono">{ligne.quantite}</span>
-                      <button type="button" aria-label="Augmenter la quantité" onClick={() => modifierQuantite(ligne.id, ligne.quantite + 1)}>
-                        +
-                      </button>
+
+                  {comparateurOuvert === ligne.id && (
+                    <div className="comparateur-panel">
+                      {comparateurEnCours === ligne.id && (
+                        <p className="page-lead" style={{ fontSize: '0.75rem' }}>
+                          Comparaison des fournisseurs…
+                        </p>
+                      )}
+                      {erreurComparateur && !comparateurs[ligne.id] && comparateurEnCours !== ligne.id && (
+                        <Alert type="error">{erreurComparateur}</Alert>
+                      )}
+                      {comparateurs[ligne.id]?.map((fournisseur) => (
+                        <div
+                          className={`comparateur-row ${fournisseur.moins_cher ? 'comparateur-row-moins-cher' : ''}`}
+                          key={fournisseur.nom}
+                        >
+                          <span>
+                            {fournisseur.nom}
+                            {fournisseur.moins_cher ? ' · le moins cher' : ''}
+                          </span>
+                          <span className="text-numeric">{fournisseur.prix.toFixed(2)} €</span>
+                          <button
+                            type="button"
+                            className="li-action"
+                            onClick={() => appliquerPrixFournisseur(ligne.id, fournisseur.prix)}
+                          >
+                            Utiliser ce prix
+                          </button>
+                        </div>
+                      ))}
                     </div>
-                    <div className="li-price text-mono">{(ligne.quantite * ligne.prixUnitaire).toFixed(2)} €</div>
-                  </div>
+                  )}
                 </div>
               )
             })}

@@ -1,3 +1,4 @@
+import hashlib
 import json
 
 import httpx
@@ -8,6 +9,44 @@ from app.core.runtime_config import get_openrouter_api_key
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 MODELE = "anthropic/claude-sonnet-5"
 
+# Noms de fournisseurs generiques et fictifs specifiques a l'entretien d'espaces verts
+# (aucune enseigne reelle) - meme principe que le comparateur du module bricolage
+# (app/devis/service.py::comparer_fournisseurs), duplique volontairement plutot que
+# partage entre modules pour rester coherent avec le reste de l'architecture (second
+# module independant).
+NOMS_FOURNISSEURS = [
+    "Pépinière du Coin",
+    "Négoce Paysager Plus",
+    "Jardi Dépôt",
+    "Grand Comptoir Végétal",
+    "Végétal Distribution",
+]
+
+
+def comparer_fournisseurs(designation: str, prix_actuel: float) -> list[dict]:
+    """Simule 3 fournisseurs fictifs pour la meme prestation/produit, avec une variation
+    de prix deterministe (basee sur un hash de la designation) plutot qu'aleatoire - la
+    meme ligne renvoie toujours le meme comparatif."""
+    hachage = int(hashlib.sha256(designation.encode()).hexdigest(), 16)
+
+    noms_restants = list(NOMS_FOURNISSEURS)
+    noms_choisis = []
+    for i in range(3):
+        index = (hachage >> (i * 5)) % len(noms_restants)
+        noms_choisis.append(noms_restants.pop(index))
+
+    fournisseurs = []
+    for i, nom in enumerate(noms_choisis):
+        octet = (hachage >> (i * 8)) & 0xFF
+        facteur = 0.88 + (octet / 255) * 0.27  # entre -12% et +15% du prix actuel
+        fournisseurs.append({"nom": nom, "prix": round(prix_actuel * facteur, 2)})
+
+    fournisseurs.sort(key=lambda f: f["prix"])
+    for i, fournisseur in enumerate(fournisseurs):
+        fournisseur["moins_cher"] = i == 0
+
+    return fournisseurs
+
 PROMPT_FORMULES_TEMPLATE = (
     "Tu dois construire 3 formules de devis (eco, standard, premium) pour ce diagnostic d'entretien :\n"
     "- Categorie principale du besoin : {categorie}\n"
@@ -16,16 +55,34 @@ PROMPT_FORMULES_TEMPLATE = (
     "- Surface/longueur estimee : {surface}\n\n"
     "Catalogue disponible pour ce compte (designation : prix / unite (categorie)) :\n{catalogue}\n\n"
     "Regles :\n"
-    "- eco : uniquement les prestations essentielles, le minimum pour repondre au besoin.\n"
-    "- standard (recommande) : eco + les prestations complementaires usuelles pour un resultat soigne "
-    "(par exemple evacuation des dechets, finitions).\n"
-    "- premium : standard + des options de qualite ou d'entretien renforce si elles existent dans le "
-    "catalogue (traitement, fertilisation, paillage...).\n"
+    "- eco : uniquement les prestations essentielles, le strict minimum pour repondre au besoin signale - rien "
+    "de plus, meme si d'autres prestations du catalogue seraient pertinentes.\n"
+    "- standard (recommande) : eco + les prestations complementaires qu'un professionnel serieux inclut par "
+    "defaut pour un travail bien fini (evacuation des dechets generes par les lignes de eco, petites "
+    "finitions) - c'est la formule que tu recommanderais toi-meme a un client.\n"
+    "- premium : standard + des prestations d'entretien renforce qui prolongent le resultat dans le temps "
+    "(traitement, fertilisation, paillage...) UNIQUEMENT si elles existent dans le catalogue et font sens pour "
+    "ce type d'espace - ne les invente pas si rien de pertinent n'est disponible.\n"
     "- N'utilise QUE des designations presentes EXACTEMENT dans le catalogue ci-dessus (copie-les telles "
-    "quelles, sans les modifier).\n"
-    "- Calcule une quantite realiste pour chaque ligne : si l'unite du produit correspond a la surface/longueur "
-    "estimee (m2 ou ml), utilise cette valeur ; sinon utilise une quantite entiere raisonnable (1 le plus "
-    "souvent).\n"
+    "quelles, sans les modifier).\n\n"
+    "CALCUL DES QUANTITES - base-toi sur des taux d'usage reels du metier, pas des chiffres arbitraires :\n"
+    "- Si l'unite du produit correspond exactement a la surface/longueur estimee (m2 ou ml), utilise "
+    "directement cette valeur (ex : tonte, taille de haie au ml, desherbage/traitement/paillage au m2).\n"
+    "- Engrais/fertilisation (sac de 10 ou 20kg) : dosage courant 20 a 40 g/m2 pour un engrais organique - un "
+    "sac de 20kg traite environ 500 a 800 m2 selon ce dosage. Calcule le nombre de sacs = surface totale / "
+    "couverture par sac (arrondi a l'entier superieur, minimum 1), pas systematiquement 1 sac quelle que soit "
+    "la surface.\n"
+    "- Plantation d'arbustes ou de vivaces isolees (prix a l'unite, pas au ml) : compte environ un plant tous "
+    "les 1 a 1,5 m lineaire pour un alignement, ou 3 a 5 plants par m2 pour un massif dense de vivaces - deduis "
+    "un nombre entier de plants a partir de la surface/longueur estimee plutot que de mettre 1 par defaut.\n"
+    "- Evacuation de dechets verts (prix au m3) : compte environ 0,001 a 0,002 m3 de dechets par m2 de pelouse "
+    "tondue/debroussaillee, et environ 0,03 a 0,05 m3 par metre lineaire de haie taillee - additionne les "
+    "dechets generes par les autres lignes de la meme formule (minimum 0,5 m3 des qu'une evacuation est "
+    "incluse, un volume ne se facture pas en dessous d'un seuil pratique).\n"
+    "- Pour tout le reste (aucune correspondance d'unite ni de regle ci-dessus), utilise une quantite entiere "
+    "raisonnable (1 le plus souvent), jamais une quantite gonflee sans justification.\n"
+    "- Arrondis toujours a une quantite qui a du sens dans le metier : entiers pour les sacs/plants/unites, "
+    "pas de decimales improbables (ex: 3,27 sacs).\n"
     "- standard doit apporter strictement plus de valeur que eco, et premium strictement plus que standard.\n"
     "- Si le catalogue ne contient rien de pertinent pour une prestation d'interieur, fais au mieux avec ce "
     "qui est disponible plutot que de renvoyer une liste vide.\n\n"

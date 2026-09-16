@@ -10,9 +10,12 @@ from app.diagnostic.session_store import recuperer_session
 from app.devis.models import (
     AlternativeInput,
     AlternativeResultat,
+    ComparateurInput,
+    ComparateurResultat,
     DevisGenere,
     DevisPdfInput,
     DiagnosticInput,
+    FournisseurComparateur,
     GroupeCategorie,
     HistoriqueDetail,
     HistoriqueResume,
@@ -21,7 +24,7 @@ from app.devis.models import (
     StatistiquesDevis,
 )
 from app.devis.pdf import construire_pdf_devis
-from app.devis.service import trouver_alternative_moins_chere
+from app.devis.service import comparer_fournisseurs, trouver_alternative_moins_chere
 
 router = APIRouter(prefix="/devis", tags=["devis"])
 
@@ -121,6 +124,16 @@ async def proposer_alternative(payload: AlternativeInput) -> AlternativeResultat
         payload.reference_actuelle, payload.categorie, payload.prix_actuel
     )
     return AlternativeResultat(**resultat)
+
+
+@router.post("/comparateur", response_model=ComparateurResultat)
+async def comparer_prix(payload: ComparateurInput) -> ComparateurResultat:
+    fournisseurs = comparer_fournisseurs(payload.reference, payload.prix_actuel)
+    return ComparateurResultat(
+        reference=payload.reference,
+        nom_produit=payload.nom,
+        fournisseurs=[FournisseurComparateur(**f) for f in fournisseurs],
+    )
 
 
 @router.get("/statistiques", response_model=StatistiquesDevis)

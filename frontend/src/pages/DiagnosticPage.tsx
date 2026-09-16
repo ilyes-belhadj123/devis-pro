@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { affinerDiagnostic, genererDevis, type DevisApi, type DiagnosticApi } from '../api'
 import Alert from '../components/Alert'
+import ZonesDetectees from '../components/ZonesDetectees'
 import { mockDiagnostic } from '../mocks/mockData'
 import { compresserImage } from '../utils/compresserImage'
 import './DiagnosticPage.css'
@@ -124,20 +125,23 @@ function DiagnosticPage() {
             {isScanning ? (
               <div className="scan-line" />
             ) : (
-              <div className="ring-badge">
-                <div
-                  className="ring"
-                  style={{
-                    background: `conic-gradient(var(--color-accent-amber) 0% ${pourcentageConfiance}%, rgba(255,255,255,0.18) ${pourcentageConfiance}% 100%)`,
-                  }}
-                >
-                  <span>{pourcentageConfiance}%</span>
+              <>
+                <ZonesDetectees zones={diagnostic.zones_detectees ?? []} />
+                <div className="ring-badge">
+                  <div
+                    className="ring"
+                    style={{
+                      background: `conic-gradient(var(--color-accent-amber) 0% ${pourcentageConfiance}%, rgba(255,255,255,0.18) ${pourcentageConfiance}% 100%)`,
+                    }}
+                  >
+                    <span>{pourcentageConfiance}%</span>
+                  </div>
+                  <div className="ring-badge-text">
+                    Confiance
+                    <b>{diagnostic.confiance >= 0.75 ? 'Diagnostic fiable' : 'À préciser'}</b>
+                  </div>
                 </div>
-                <div className="ring-badge-text">
-                  Confiance
-                  <b>{diagnostic.confiance >= 0.75 ? 'Diagnostic fiable' : 'À préciser'}</b>
-                </div>
-              </div>
+              </>
             )}
           </div>
 

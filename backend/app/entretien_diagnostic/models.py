@@ -7,6 +7,15 @@ class EstimationSurface(BaseModel):
     a_confirmer: bool = True
 
 
+class ZoneDetectee(BaseModel):
+    photo_index: int = 0
+    x: float
+    y: float
+    largeur: float
+    hauteur: float
+    label: str = ""
+
+
 class DiagnosticEntretienResultat(BaseModel):
     lieu: str = "exterieur"
     type_espace_cle: str
@@ -18,5 +27,6 @@ class DiagnosticEntretienResultat(BaseModel):
     estimation_surface: EstimationSurface | None = None
     questions_clarification: list[str] = []
     suggestions_clarification: list[list[str]] = []
+    zones_detectees: list[ZoneDetectee] = []
     degrade: bool = False
     session_id: str | None = None

@@ -32,14 +32,26 @@ PROMPT_SYSTEME = (
     "recurrents (coproprietes, collectivites, bailleurs) - pas pour la creation de jardin sur mesure.\n\n"
     "ETAPE 1 - OBSERVATION VISUELLE (obligatoire, avant toute conclusion) :\n"
     "Determine d'abord si la photo montre un espace INTERIEUR ou EXTERIEUR. Decris ensuite precisement ce que "
-    "tu vois : nature de l'espace (pelouse, haie, massif, arbre isole, allee, hall, local...), etat (hauteur "
-    "d'herbe, densite de la haie, presence de mauvaises herbes, feuilles mortes, salissures, poussiere...), et "
-    "etendue visible. Pour estimer une surface (m2) ou une longueur (metres lineaires), utilise en priorite un "
-    "objet de taille connue ou une longueur de reference si le client les a signales dans sa note, sinon des "
-    "reperes d'echelle visibles sur la photo (une porte standard environ 80 cm de large, une dalle de terrasse "
-    "40x40 ou 50x50 cm, une voiture environ 4,5 m de long, un pas d'adulte environ 70 cm, une brouette environ "
-    "1,5 m). Si aucun repere fiable n'est disponible, fais une estimation par defaut prudente et indique-le "
-    "clairement (elle sera marquee 'a confirmer' pour que le client puisse la corriger manuellement).\n\n"
+    "tu vois : nature de l'espace (pelouse, haie, massif, arbre isole, allee, hall, local...), et etendue "
+    "visible. Pour estimer une surface (m2) ou une longueur (metres lineaires), utilise en priorite un objet de "
+    "taille connue ou une longueur de reference si le client les a signales dans sa note, sinon des reperes "
+    "d'echelle visibles sur la photo - exterieur : une porte standard environ 80 cm de large, une dalle de "
+    "terrasse 40x40 ou 50x50 cm, une voiture environ 4,5 m de long, un pas d'adulte environ 70 cm, une brouette "
+    "environ 1,5 m, une cloture/palissade standard environ 1,80 m de haut, un bac/poubelle roulant environ 1 m "
+    "de haut ; interieur : une porte standard environ 80 cm de large et 2 m de haut, un interrupteur environ "
+    "8x8 cm a 1,10 m du sol, un carrelage 30x30 ou 60x60 cm. Si aucun repere fiable n'est disponible, fais une "
+    "estimation par defaut prudente et indique-le clairement (elle sera marquee 'a confirmer' pour que le "
+    "client puisse la corriger manuellement).\n\n"
+    "ETAT DE L'ESPACE - classe ce que tu observes sur une echelle concrete plutot qu'une description vague, "
+    "cela oriente directement les taches et leur ampleur :\n"
+    "- hauteur d'herbe : tondue recemment (<5 cm), pousse moderee (5 a 15 cm, tonte standard), haute/negligee "
+    "(>15 cm, necessite un premier passage renforce ou un debroussaillage avant une tonte normale).\n"
+    "- envahissement par les mauvaises herbes : leger (<10% de la surface), modere (10 a 40%), important (>40%, "
+    "necessite un desherbage approfondi a part entiere, pas une simple finition).\n"
+    "- etat de la haie : entretenue (forme nette, pousse depuis le dernier passage <20 cm) vs negligee (forme "
+    "irreguliere, pousse >40 cm, taille plus consequente et plus longue a prevoir).\n"
+    "- proprete d'un espace interieur : entretien courant (poussiere legere) vs salissures marquees/tenaces "
+    "(necessite un nettoyage renforce, pas un simple depoussierage).\n\n"
     "ETAPE 2 - CLASSIFICATION :\n"
     "Choisis UNE categorie parmi cette liste exacte de cles (aucune autre valeur n'est valide) - cette liste "
     "est actuellement orientee espaces verts, choisis 'divers' si aucune ne correspond a une prestation "
@@ -48,7 +60,16 @@ PROMPT_SYSTEME = (
     "ETAPE 3 - TACHES SUGGEREES :\n"
     "Propose 2 a 5 taches concretes et realistes pour cet espace, avec si possible une quantite estimee entre "
     'parentheses (ex: "Tonte de la pelouse (~120 m2)", "Taille de la haie (~18 ml)", "Nettoyage du hall '
-    '(~40 m2)").\n\n'
+    '(~40 m2)"). Les taches doivent refleter l\'etat reellement observe (etape precedente) : un espace "haute/'
+    'negligee" ou "important" justifie une tache renforcee ou prealable (debroussaillage, desherbage approfondi) '
+    "en plus de l'entretien standard, pas seulement la tache habituelle comme si l'espace etait deja entretenu.\n\n"
+    "ETAPE 3BIS - LOCALISATION VISUELLE (radar de zones) :\n"
+    "Pour chaque zone precise et visible necessitant une intervention distincte (une zone de mauvaises herbes, "
+    "une branche morte, une partie de haie particulierement degradee, une tache/salissure marquee...), donne un "
+    "rectangle englobant resserre sur cette zone, en coordonnees normalisees par rapport a CETTE photo (0 = "
+    "bord gauche/haut, 1 = bord droit/bas) : x et y = coin superieur gauche, largeur et hauteur = dimensions. "
+    "N'en mets QUE si tu peux reellement pointer une zone precise depuis l'image (pas pour une tache generale "
+    "comme 'tondre toute la pelouse' qui concerne l'espace entier). Maximum 4 zones.\n\n"
     "ETAPE 4 - CLARIFICATION :\n"
     "Ne pose une question que pour une information necessaire mais reellement impossible a determiner depuis "
     "la photo et la note du client (ex : la photo ne montre qu'une partie de l'espace). Questions CHIFFREES ou "
@@ -68,7 +89,10 @@ PROMPT_SYSTEME = (
     'deductible, sinon liste vide>], "suggestions_clarification": [<pour CHAQUE question ci-dessus, dans le '
     "meme ordre, une liste de 2 a 4 reponses courtes correspondant aux choix ou fourchettes proposes ; liste "
     "vide [] si la question est ouverte sans choix predefinis. Le tableau doit avoir exactement autant "
-    'd\'elements que questions_clarification, dans le meme ordre.>]}'
+    'd\'elements que questions_clarification, dans le meme ordre.>], "zones_detectees": [{"photo_index": <index '
+    'de la photo concernee, 0 pour la premiere>, "x": <0 a 1>, "y": <0 a 1>, "largeur": <0 a 1>, "hauteur": '
+    '<0 a 1>, "label": "<description courte, ex: \'zone envahie\', \'branche morte\'>"}, ...] (liste vide si '
+    "aucune zone n'est localisable precisement)}"
 )
 
 
@@ -132,6 +156,40 @@ def _normaliser_suggestions(suggestions_brutes: object, questions: list[str]) ->
     return suggestions
 
 
+def _normaliser_zones(zones_brutes: object) -> list[dict]:
+    """Valide et nettoie les zones detectees par l'IA (radar visuel) : coordonnees bornees a
+    [0, 1], entrees mal formees ignorees plutot que de faire planter toute la reponse."""
+    if not isinstance(zones_brutes, list):
+        return []
+
+    zones: list[dict] = []
+    for item in zones_brutes[:4]:
+        if not isinstance(item, dict):
+            continue
+        try:
+            x = max(0.0, min(1.0, float(item["x"])))
+            y = max(0.0, min(1.0, float(item["y"])))
+            largeur = max(0.02, min(1.0 - x, float(item["largeur"])))
+            hauteur = max(0.02, min(1.0 - y, float(item["hauteur"])))
+        except (KeyError, TypeError, ValueError):
+            continue
+        try:
+            photo_index = max(0, int(item.get("photo_index", 0)))
+        except (TypeError, ValueError):
+            photo_index = 0
+        zones.append(
+            {
+                "photo_index": photo_index,
+                "x": round(x, 4),
+                "y": round(y, 4),
+                "largeur": round(largeur, 4),
+                "hauteur": round(hauteur, 4),
+                "label": str(item.get("label", ""))[:60],
+            }
+        )
+    return zones
+
+
 def _finaliser_resultat(resultat: dict) -> dict:
     try:
         type_espace_cle = resultat["type_espace_cle"]
@@ -176,6 +234,7 @@ def _finaliser_resultat(resultat: dict) -> dict:
         "estimation_surface": estimation_surface,
         "questions_clarification": questions,
         "suggestions_clarification": _normaliser_suggestions(resultat.get("suggestions_clarification"), questions),
+        "zones_detectees": _normaliser_zones(resultat.get("zones_detectees")),
         "degrade": False,
     }
 

@@ -1,8 +1,47 @@
+import hashlib
+
 import httpx
 
 from app.core.ai_utils import extraire_json
 from app.core.database import database
 from app.core.runtime_config import get_openrouter_api_key
+
+# Noms de fournisseurs generiques et fictifs (aucune enseigne reelle) pour le comparateur
+# de prix simule (TICKET comparateur) - un vrai comparateur demanderait un partenariat/API
+# officiel avec chaque enseigne, hors de portee d'un prototype de demo.
+NOMS_FOURNISSEURS = [
+    "Atelier du Bâtiment",
+    "Dépôt Matériaux Plus",
+    "Quincaillerie Générale",
+    "Grand Comptoir Pro",
+    "Comptoir des Artisans",
+]
+
+
+def comparer_fournisseurs(reference: str, prix_actuel: float) -> list[dict]:
+    """Simule 3 fournisseurs fictifs pour le meme article, avec une variation de prix
+    deterministe (basee sur un hash de la reference) plutot qu'aleatoire a chaque appel -
+    le meme article renvoie toujours le meme comparatif."""
+    hachage = int(hashlib.sha256(reference.encode()).hexdigest(), 16)
+
+    noms_restants = list(NOMS_FOURNISSEURS)
+    noms_choisis = []
+    for i in range(3):
+        index = (hachage >> (i * 5)) % len(noms_restants)
+        noms_choisis.append(noms_restants.pop(index))
+
+    fournisseurs = []
+    for i, nom in enumerate(noms_choisis):
+        # facteur deterministe entre 0.88 (-12%) et 1.15 (+15%) du prix actuel
+        octet = (hachage >> (i * 8)) & 0xFF
+        facteur = 0.88 + (octet / 255) * 0.27
+        fournisseurs.append({"nom": nom, "prix": round(prix_actuel * facteur, 2)})
+
+    fournisseurs.sort(key=lambda f: f["prix"])
+    for i, fournisseur in enumerate(fournisseurs):
+        fournisseur["moins_cher"] = i == 0
+
+    return fournisseurs
 
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 MODELE = "anthropic/claude-sonnet-5"

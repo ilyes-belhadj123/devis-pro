@@ -62,3 +62,19 @@ class ContratRecurrentGenere(BaseModel):
     prix_annuel: float
     prix_mensuel: float
     economie_pourcentage: float
+
+
+class ComparateurInput(BaseModel):
+    designation: str
+    prix_actuel: float = Field(ge=0)
+
+
+class FournisseurComparateur(BaseModel):
+    nom: str
+    prix: float
+    moins_cher: bool = False
+
+
+class ComparateurResultat(BaseModel):
+    designation: str
+    fournisseurs: list[FournisseurComparateur]

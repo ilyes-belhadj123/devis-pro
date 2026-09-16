@@ -56,6 +56,24 @@ class AlternativeResultat(BaseModel):
     unite: str | None = None
 
 
+class ComparateurInput(BaseModel):
+    reference: str
+    nom: str
+    prix_actuel: float = Field(ge=0)
+
+
+class FournisseurComparateur(BaseModel):
+    nom: str
+    prix: float
+    moins_cher: bool = False
+
+
+class ComparateurResultat(BaseModel):
+    reference: str
+    nom_produit: str
+    fournisseurs: list[FournisseurComparateur]
+
+
 class RepartitionProbleme(BaseModel):
     probleme: str
     nombre: int

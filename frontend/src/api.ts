@@ -50,6 +50,15 @@ export async function genererDevis(probleme: string, sessionId?: string | null):
   return response.json()
 }
 
+export type ZoneDetecteeApi = {
+  photo_index: number
+  x: number
+  y: number
+  largeur: number
+  hauteur: number
+  label?: string
+}
+
 export type DiagnosticApi = {
   probleme_cle: string
   probleme_label: string
@@ -58,6 +67,7 @@ export type DiagnosticApi = {
   confiance: number
   questions_clarification: string[]
   suggestions_clarification?: string[][]
+  zones_detectees?: ZoneDetecteeApi[]
   degrade: boolean
   session_id?: string | null
 }
@@ -170,6 +180,36 @@ export async function trouverAlternative(
 
   if (!response.ok) {
     await lancerErreur(response, `Erreur ${response.status} lors de la recherche d'alternative`)
+  }
+
+  return response.json()
+}
+
+export type FournisseurComparateurApi = {
+  nom: string
+  prix: number
+  moins_cher: boolean
+}
+
+export type ComparateurApi = {
+  reference: string
+  nom_produit: string
+  fournisseurs: FournisseurComparateurApi[]
+}
+
+export async function comparerFournisseurs(
+  reference: string,
+  nom: string,
+  prixActuel: number,
+): Promise<ComparateurApi> {
+  const response = await fetch(`${API_URL}/devis/comparateur`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ reference, nom, prix_actuel: prixActuel }),
+  })
+
+  if (!response.ok) {
+    await lancerErreur(response, `Erreur ${response.status} lors de la comparaison des prix`)
   }
 
   return response.json()

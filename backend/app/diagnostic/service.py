@@ -18,14 +18,22 @@ PROMPT_CRITERES_PAR_CATEGORIE = (
     "CRITERES CLES PAR CATEGORIE (utilise ceux pertinents pour orienter tes observations et tes questions, "
     "dans cet ordre de priorite) :\n"
     "- peinture (mur a peindre/reboucher) : surface totale en m2, nombre de couches necessaires selon l'etat "
-    "actuel, fissure(s) active(s) (bords nets, recente, traverse un enduit/peinture intact) vs stable(s) "
-    "(bords erodes, ancienne peinture craquelee par-dessus), traces d'humidite ou de moisissure visibles.\n"
+    "actuel, traces d'humidite ou de moisissure visibles. Classe la ou les fissures par largeur estimee : "
+    "fine/capillaire (<0,2mm, cosmetique, un enduit de finition fin suffit), moyenne (0,2 a 2mm, necessite un "
+    "vrai enduit de rebouchage), large ou traversante (>2mm, ou qui traverse un enduit/une peinture par ailleurs "
+    "intacte = fissure active) : dans ce dernier cas, signale-le clairement dans probleme_label comme un cas "
+    "potentiellement structurel a faire verifier, plutot que de proposer un simple rebouchage cosmetique.\n"
     "- plomberie (fuite, robinet, siphon) : emplacement precis de la fuite (joint, corps du robinet, raccord, "
-    "canalisation), materiau visible du tuyau (cuivre, PVC, multicouche), diametre approximatif, fuite "
-    "continue ou seulement a l'usage.\n"
-    "- fixation (etagere, objet a fixer, cadre) : poids approximatif et dimensions de l'objet a fixer, type de "
-    "mur visible (placo/BA13 blanc uniforme, beton brut gris, brique, parpaing/agglo), fixations existantes "
-    "deja en place.\n"
+    "canalisation), materiau visible du tuyau (cuivre, PVC, multicouche), diametre approximatif. Classe la fuite "
+    "par gravite : suintement/traces d'humidite seulement (goutte a goutte occasionnel), fuite reguliere a "
+    "l'usage (quand le robinet/l'appareil fonctionne), ou fuite continue meme a l'arret (la plus urgente, "
+    "risque dexces d'eau) - cette classification oriente l'urgence et le type d'intervention a suggerer.\n"
+    "- fixation (etagere, objet a fixer, cadre) : dimensions de l'objet a fixer et type de mur visible "
+    "(placo/BA13 blanc uniforme, beton brut gris, brique, parpaing/agglo), fixations existantes deja en place. "
+    "Classe le poids estime de l'objet (a partir de sa taille/matiere apparente) : leger (<5kg, type cadre ou "
+    "petite etagere - chevilles standard), moyen (5 a 20kg, type etagere chargee ou miroir - chevilles a "
+    "expansion/molly), lourd (>20kg, type meuble suspendu ou television - fixations traversantes/renforcees "
+    "necessaires) : cette classe determine le type de fixation a prevoir, pas seulement la quantite.\n"
     "- electricite (prise, interrupteur, eclairage) : remplacement a l'identique ou nouvelle installation, "
     "arrivee/gaine deja visible ou a creer, nombre de points concernes.\n"
     "- jardin (terrain, plantation, arrosage) : surface approximative de la zone concernee, type de sol "
@@ -41,15 +49,27 @@ PROMPT_SYSTEME = (
     "supposer ce que tu ne peux pas voir. Si plusieurs photos sont fournies, elles peuvent montrer differents "
     "angles ou zooms du meme probleme : combine les informations de toutes les photos avant de conclure plutot "
     "que de n'en analyser qu'une seule. Decris : nature et etat du support/materiau, etendue visible du probleme (longueur/surface/nombre "
-    "d'elements estimes a partir d'objets de reference visibles dans le cadre - une prise de courant fait "
-    "environ 8x8 cm, une porte standard environ 80 cm de large, un carrelage courant 30x30 cm ou 60x60 cm, une "
-    "brique environ 22 cm de long), les criteres cles de la categorie probable (voir liste ci-dessus), et tout "
-    "indice de contexte (interieur/exterieur, piece, luminosite). Base tes estimations sur ces reperes plutot "
-    "que de deviner au hasard. Si aucun repere d'echelle n'est visible, dis-le explicitement plutot que "
-    "d'inventer une mesure.\n\n"
+    "d'elements estimes a partir d'objets de reference visibles dans le cadre - une prise de courant ou un "
+    "interrupteur fait environ 8x8 cm (a environ 1,10 m du sol pour un interrupteur), une porte standard environ "
+    "80 cm de large et 2 m de haut, un carrelage courant 30x30 cm ou 60x60 cm, une brique environ 22 cm de long, "
+    "une plinthe environ 10 cm de haut, un radiateur standard environ 60 cm de large, un evier de cuisine "
+    "standard environ 60 cm de large), les criteres cles de la categorie probable (voir liste ci-dessus), et "
+    "tout indice de contexte (interieur/exterieur, piece, luminosite). Base tes estimations sur ces reperes "
+    "plutot que de deviner au hasard. Si aucun repere d'echelle n'est visible, dis-le explicitement plutot que "
+    "d'inventer une mesure. Avant de conclure, verifie la coherence de ton diagnostic : les taches/quantites "
+    "envisagees doivent correspondre a la gravite reellement observee (ex : une fissure large ou une fuite "
+    "continue meritent d'etre signalees comme telles, pas traitees comme un cas mineur standard).\n\n"
     "ETAPE 2 - CLASSIFICATION :\n"
     "Choisis UNE valeur parmi cette liste exacte de cles (aucune autre valeur n'est valide) :\n"
     f"{', '.join(PROBLEMES_CONNUS)}\n\n"
+    "ETAPE 2BIS - LOCALISATION VISUELLE DU DEFAUT (radar de zones) :\n"
+    "Pour chaque defaut precis et visible sur une photo (une fissure, une trace de fuite, un point de rouille, "
+    "l'endroit exact a fixer...), donne un rectangle englobant resserre sur ce defaut, en coordonnees "
+    "normalisees par rapport a CETTE photo (0 = bord gauche/haut, 1 = bord droit/bas) : x et y = coin superieur "
+    "gauche du rectangle, largeur et hauteur = ses dimensions. Un defaut allonge (fissure) doit avoir un "
+    "rectangle allonge dans le meme sens, pas un carre autour de toute la photo. N'en mets QUE si tu peux "
+    "reellement pointer une zone precise depuis l'image ; si le defaut n'est decrit que par le texte du client "
+    "et non visible sur la photo, ne l'ajoute pas a cette liste. Maximum 4 zones.\n\n"
     "ETAPE 3 - CLARIFICATION :\n"
     "Ne pose une question au client QUE pour une information necessaire au devis mais reellement impossible a "
     "determiner depuis la photo (ex : la photo ne montre qu'un coin du mur, la surface totale de la piece "
@@ -78,7 +98,10 @@ PROMPT_SYSTEME = (
     'question (exemple pour la question "moins de 5 m2, entre 5 et 15 m2, ou plus de 15 m2 ?" : ["moins de 5 '
     'm2", "entre 5 et 15 m2", "plus de 15 m2"]) ; liste vide [] si cette question precise est ouverte sans '
     "choix predefinis. Le tableau suggestions_clarification doit avoir exactement autant d'elements que "
-    "questions_clarification, dans le meme ordre.>]}"
+    'questions_clarification, dans le meme ordre.>], "zones_detectees": [{"photo_index": <index de la photo '
+    "concernee, 0 pour la premiere>, \"x\": <0 a 1>, \"y\": <0 a 1>, \"largeur\": <0 a 1>, \"hauteur\": <0 a 1>, "
+    '"label": "<description courte du defaut, ex: \'fissure\', \'trace de fuite\'>"}, ...] (liste vide si aucun '
+    "defaut n'est localisable precisement sur une photo)}"
 )
 
 PROMPT_MATERIEL_TEMPLATE = (
@@ -228,6 +251,7 @@ async def _finaliser_resultat(resultat: dict) -> dict:
         "confiance": float(resultat.get("confiance", 0.5)),
         "questions_clarification": questions,
         "suggestions_clarification": _normaliser_suggestions(resultat.get("suggestions_clarification"), questions),
+        "zones_detectees": _normaliser_zones(resultat.get("zones_detectees")),
         "degrade": False,
     }
 
@@ -240,6 +264,40 @@ def _normaliser_suggestions(suggestions_brutes: object, questions: list[str]) ->
         item = suggestions_brutes[i] if isinstance(suggestions_brutes, list) and i < len(suggestions_brutes) else None
         suggestions.append([str(option) for option in item] if isinstance(item, list) else [])
     return suggestions
+
+
+def _normaliser_zones(zones_brutes: object) -> list[dict]:
+    """Valide et nettoie les zones detectees par l'IA (radar visuel) : coordonnees bornees a
+    [0, 1], entrees mal formees ignorees plutot que de faire planter toute la reponse."""
+    if not isinstance(zones_brutes, list):
+        return []
+
+    zones: list[dict] = []
+    for item in zones_brutes[:4]:
+        if not isinstance(item, dict):
+            continue
+        try:
+            x = max(0.0, min(1.0, float(item["x"])))
+            y = max(0.0, min(1.0, float(item["y"])))
+            largeur = max(0.02, min(1.0 - x, float(item["largeur"])))
+            hauteur = max(0.02, min(1.0 - y, float(item["hauteur"])))
+        except (KeyError, TypeError, ValueError):
+            continue
+        try:
+            photo_index = max(0, int(item.get("photo_index", 0)))
+        except (TypeError, ValueError):
+            photo_index = 0
+        zones.append(
+            {
+                "photo_index": photo_index,
+                "x": round(x, 4),
+                "y": round(y, 4),
+                "largeur": round(largeur, 4),
+                "hauteur": round(hauteur, 4),
+                "label": str(item.get("label", ""))[:60],
+            }
+        )
+    return zones
 
 
 async def analyser_photo(

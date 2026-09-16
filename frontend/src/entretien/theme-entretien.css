@@ -8,6 +8,7 @@
   --color-accent-copper-hover: #176c59;
   --color-accent-copper-soft: #e4f3ee;
   --color-accent-amber: #8bc98a;
+  --color-accent-amber-rgb: 139, 201, 138;
   --gradient-brand: linear-gradient(120deg, #1f8a72, #8bc98a);
   --shadow-md: 0 10px 24px -8px rgba(31, 138, 114, 0.28);
   --effect-scan-gradient: linear-gradient(

@@ -67,6 +67,15 @@ export async function importerCatalogueEntretien(compteId: string, fichier: File
 
 export type EstimationSurfaceApi = { valeur: number; unite: string; a_confirmer: boolean } | null
 
+export type ZoneDetecteeApi = {
+  photo_index: number
+  x: number
+  y: number
+  largeur: number
+  hauteur: number
+  label?: string
+}
+
 export type DiagnosticEntretienApi = {
   lieu: string
   type_espace_cle: string
@@ -78,6 +87,7 @@ export type DiagnosticEntretienApi = {
   estimation_surface?: EstimationSurfaceApi
   questions_clarification: string[]
   suggestions_clarification?: string[][]
+  zones_detectees?: ZoneDetecteeApi[]
   degrade: boolean
   session_id?: string | null
 }
@@ -204,6 +214,32 @@ export async function genererContratRecurrent(
   })
   if (!response.ok) {
     await lancerErreur(response, `Erreur ${response.status} lors du calcul du contrat récurrent`)
+  }
+  return response.json()
+}
+
+export type FournisseurComparateurApi = {
+  nom: string
+  prix: number
+  moins_cher: boolean
+}
+
+export type ComparateurEntretienApi = {
+  designation: string
+  fournisseurs: FournisseurComparateurApi[]
+}
+
+export async function comparerFournisseursEntretien(
+  designation: string,
+  prixActuel: number,
+): Promise<ComparateurEntretienApi> {
+  const response = await fetch(`${API_URL}/entretien/devis/comparateur`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ designation, prix_actuel: prixActuel }),
+  })
+  if (!response.ok) {
+    await lancerErreur(response, `Erreur ${response.status} lors de la comparaison des prix`)
   }
   return response.json()
 }
