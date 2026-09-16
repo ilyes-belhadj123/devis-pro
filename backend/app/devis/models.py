@@ -66,6 +66,9 @@ class FournisseurComparateur(BaseModel):
     nom: str
     prix: float
     moins_cher: bool = False
+    delai_livraison: str
+    note: float
+    nombre_avis: int
 
 
 class ComparateurResultat(BaseModel):

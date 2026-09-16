@@ -222,6 +222,9 @@ export type FournisseurComparateurApi = {
   nom: string
   prix: number
   moins_cher: boolean
+  delai_livraison: string
+  note: number
+  nombre_avis: number
 }
 
 export type ComparateurEntretienApi = {

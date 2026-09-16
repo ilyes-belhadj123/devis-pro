@@ -179,6 +179,18 @@
   background: var(--color-bg-surface-sunken);
 }
 
+.comparateur-row-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.comparateur-row-meta {
+  font-size: 0.6875rem;
+  color: var(--color-text-faint);
+}
+
 .comparateur-row-moins-cher {
   background: rgba(22, 163, 74, 0.08);
   border: 1px solid var(--color-state-success);

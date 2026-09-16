@@ -22,11 +22,14 @@ NOMS_FOURNISSEURS = [
     "Végétal Distribution",
 ]
 
+DELAIS_LIVRAISON = ["En stock", "Sous 2 jours", "Sous 3 jours", "Sous 5 jours"]
+
 
 def comparer_fournisseurs(designation: str, prix_actuel: float) -> list[dict]:
     """Simule 3 fournisseurs fictifs pour la meme prestation/produit, avec une variation
-    de prix deterministe (basee sur un hash de la designation) plutot qu'aleatoire - la
-    meme ligne renvoie toujours le meme comparatif."""
+    de prix, un delai de livraison et une note/nombre d'avis deterministes (bases sur un
+    hash de la designation) plutot qu'aleatoires - la meme ligne renvoie toujours le
+    meme comparatif."""
     hachage = int(hashlib.sha256(designation.encode()).hexdigest(), 16)
 
     noms_restants = list(NOMS_FOURNISSEURS)
@@ -37,9 +40,27 @@ def comparer_fournisseurs(designation: str, prix_actuel: float) -> list[dict]:
 
     fournisseurs = []
     for i, nom in enumerate(noms_choisis):
-        octet = (hachage >> (i * 8)) & 0xFF
-        facteur = 0.88 + (octet / 255) * 0.27  # entre -12% et +15% du prix actuel
-        fournisseurs.append({"nom": nom, "prix": round(prix_actuel * facteur, 2)})
+        octet_prix = (hachage >> (i * 8)) & 0xFF
+        facteur = 0.88 + (octet_prix / 255) * 0.27  # entre -12% et +15% du prix actuel
+
+        octet_delai = (hachage >> (24 + i * 4)) & 0x0F
+        delai = DELAIS_LIVRAISON[octet_delai % len(DELAIS_LIVRAISON)]
+
+        octet_note = (hachage >> (36 + i * 6)) & 0x3F
+        note = round(3.6 + (octet_note / 63) * 1.3, 1)  # entre 3.6 et 4.9
+
+        octet_avis = (hachage >> (54 + i * 10)) & 0x3FF
+        nombre_avis = 25 + (octet_avis % 275)  # entre 25 et 300
+
+        fournisseurs.append(
+            {
+                "nom": nom,
+                "prix": round(prix_actuel * facteur, 2),
+                "delai_livraison": delai,
+                "note": note,
+                "nombre_avis": nombre_avis,
+            }
+        )
 
     fournisseurs.sort(key=lambda f: f["prix"])
     for i, fournisseur in enumerate(fournisseurs):

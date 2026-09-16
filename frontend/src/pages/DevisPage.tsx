@@ -212,10 +212,15 @@ function DevisPage() {
                           className={`comparateur-row ${fournisseur.moins_cher ? 'comparateur-row-moins-cher' : ''}`}
                           key={fournisseur.nom}
                         >
-                          <span>
-                            {fournisseur.nom}
-                            {fournisseur.moins_cher ? ' · le moins cher' : ''}
-                          </span>
+                          <div className="comparateur-row-info">
+                            <span>
+                              {fournisseur.nom}
+                              {fournisseur.moins_cher ? ' · le moins cher' : ''}
+                            </span>
+                            <span className="comparateur-row-meta">
+                              ★ {fournisseur.note.toFixed(1)} ({fournisseur.nombre_avis} avis) · {fournisseur.delai_livraison}
+                            </span>
+                          </div>
                           <span className="text-numeric">{fournisseur.prix.toFixed(2)} €</span>
                           <button
                             type="button"

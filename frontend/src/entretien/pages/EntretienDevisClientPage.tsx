@@ -5,6 +5,7 @@ import { accepterDevisPublic, getDevisPublic, type DevisValidationApi } from '..
 import Confetti from '../components/Confetti'
 import CheckmarkAnime from '../components/CheckmarkAnime'
 import { useCompteur } from '../../utils/useCompteur'
+import { genererCreneaux } from '../utils/creneaux'
 
 function MontantAnime({ valeur }: { valeur: number }) {
   return <>{useCompteur(valeur).toFixed(2)} €</>
@@ -20,6 +21,7 @@ function EntretienDevisClientPage() {
   const [accepteCoche, setAccepteCoche] = useState(false)
   const [isAcceptationEnCours, setIsAcceptationEnCours] = useState(false)
   const [montrerConfetti, setMontrerConfetti] = useState(false)
+  const [creneauChoisi, setCreneauChoisi] = useState<string | null>(null)
 
   useEffect(() => {
     if (!id) return
@@ -68,6 +70,9 @@ function EntretienDevisClientPage() {
 
   if (devis.statut === 'accepte') {
     const formuleAcceptee = devis.formules.find((f) => f.niveau === devis.formule_choisie)
+    const creneaux = genererCreneaux(devis.id)
+    const creneauConfirme = creneaux.find((c) => c.id === creneauChoisi)
+
     return (
       <section className="page page-wide">
         {montrerConfetti && <Confetti />}
@@ -77,8 +82,38 @@ function EntretienDevisClientPage() {
         <Alert type="success">
           Vous avez accepté la formule « {formuleAcceptee?.label ?? devis.formule_choisie} » —{' '}
           {formuleAcceptee ? <MontantAnime valeur={formuleAcceptee.total} /> : `${devis.formule_choisie}`}. L'artisan
-          a été notifié et vous recontactera pour planifier l'intervention.
+          a été notifié.
         </Alert>
+
+        <div className="card">
+          <h2>Choisissez votre créneau d'intervention</h2>
+          {creneauConfirme ? (
+            <Alert type="success">✓ Créneau confirmé : {creneauConfirme.libelle}</Alert>
+          ) : (
+            <p className="page-lead" style={{ maxWidth: 'none' }}>
+              Voici les prochains créneaux disponibles pour l'artisan — choisissez celui qui vous convient.
+            </p>
+          )}
+          <div className="stat-row" style={{ marginTop: 'var(--space-4)' }}>
+            {creneaux.map((creneau) => (
+              <button
+                key={creneau.id}
+                type="button"
+                className={`stat-tile ${creneauChoisi === creneau.id ? 'stat-tile-accent' : ''}`}
+                style={{ textAlign: 'left', cursor: 'pointer', width: '100%' }}
+                onClick={() => setCreneauChoisi(creneau.id)}
+              >
+                <span className="stat-label">{creneauChoisi === creneau.id ? 'Sélectionné' : 'Disponible'}</span>
+                <span
+                  className={`stat-value ${creneauChoisi === creneau.id ? 'stat-value-accent' : ''}`}
+                  style={{ fontSize: '1.125rem' }}
+                >
+                  {creneau.libelle}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
       </section>
     )
   }
