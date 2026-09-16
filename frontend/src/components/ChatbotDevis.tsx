@@ -49,36 +49,36 @@ function ChatbotDevis({ lignes, total }: ChatbotDevisProps) {
     <>
       <button
         type="button"
-        className={`chatbot-fab ${ouvert ? 'chatbot-fab-ouvert' : ''}`}
+        className={`sd-assistant-fab ${ouvert ? 'sd-assistant-fab-ouvert' : ''}`}
         onClick={() => setOuvert((valeur) => !valeur)}
         aria-label="Assistant SnapDevis"
         title="Une question sur ce devis ?"
       >
-        <span className="chatbot-fab-ring" />
-        <span className="chatbot-fab-ring chatbot-fab-ring-2" />
-        <span className="chatbot-fab-icon">{ouvert ? '×' : '👷'}</span>
+        <span className="sd-assistant-fab-ring" />
+        <span className="sd-assistant-fab-ring sd-assistant-fab-ring-2" />
+        <span className="sd-assistant-fab-icon">{ouvert ? '×' : '👷'}</span>
       </button>
 
       {ouvert && (
-        <div className="chatbot-panel">
-          <div className="chatbot-panel-header">
-            <span className="chatbot-panel-title">👷 Assistant SnapDevis</span>
-            <span className="chatbot-panel-sub">Une question sur ce devis ?</span>
+        <div className="sd-assistant-panel">
+          <div className="sd-assistant-panel-header">
+            <span className="sd-assistant-panel-title">👷 Assistant SnapDevis</span>
+            <span className="sd-assistant-panel-sub">Une question sur ce devis ?</span>
           </div>
 
-          <div className="chatbot-panel-body">
+          <div className="sd-assistant-panel-body">
             {messages.length === 0 && (
-              <p className="chatbot-empty">
+              <p className="sd-assistant-empty">
                 Posez-moi une question sur ce devis précis — quantités, prix, produits utilisés…
               </p>
             )}
             {messages.map((message, index) => (
-              <div key={index} className={`chatbot-bulle chatbot-bulle-${message.role}`}>
+              <div key={index} className={`sd-assistant-bulle sd-assistant-bulle-${message.role}`}>
                 {message.content}
               </div>
             ))}
             {enCours && (
-              <div className="chatbot-bulle chatbot-bulle-assistant chatbot-bulle-loading">
+              <div className="sd-assistant-bulle sd-assistant-bulle-assistant sd-assistant-bulle-loading">
                 <span />
                 <span />
                 <span />
@@ -88,12 +88,12 @@ function ChatbotDevis({ lignes, total }: ChatbotDevisProps) {
           </div>
 
           {messages.length === 0 && (
-            <div className="chatbot-suggestions">
+            <div className="sd-assistant-suggestions">
               {SUGGESTIONS.map((suggestion) => (
                 <button
                   key={suggestion}
                   type="button"
-                  className="chatbot-suggestion-chip"
+                  className="sd-assistant-suggestion-chip"
                   onClick={() => envoyer(suggestion)}
                 >
                   {suggestion}
@@ -103,7 +103,7 @@ function ChatbotDevis({ lignes, total }: ChatbotDevisProps) {
           )}
 
           <form
-            className="chatbot-panel-input"
+            className="sd-assistant-panel-input"
             onSubmit={(event) => {
               event.preventDefault()
               envoyer(saisie)
